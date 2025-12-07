@@ -1,0 +1,791 @@
+/* Global App Styles */
+.App {
+  width: 100%;
+  min-height: 100vh;
+  background: white;
+  background-attachment: fixed;
+}
+
+/* Main Layout */
+main {
+  flex: 1;
+  width: 100%;
+  background: white;
+}
+
+.nav-hidden {
+  transform: translateY(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.navbar {
+  transition: transform 0.3s ease-in-out;
+}
+
+.profile-container{
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Hero Section */
+.hero{
+  background-color: white;
+  padding-top: 0;
+  width: 100%;
+}
+.hero-section {
+  background: white;
+  padding: 80px 0 40px;
+  color: white;
+  width: 100%;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 15px;
+}
+
+.hero-sub {
+  color: white;
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+}
+.hero img {
+  object-fit: cover;
+  object-position: right;     /* <-- aligns image starting from right side */
+  height: 100%;
+  width: 100%;
+}
+.hero-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Cards and Components */
+section {
+  width: 100%;
+  background: transparent;
+}
+
+.card {
+  background: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: black;
+}
+
+.card:hover {
+  background: rgb(213, 208, 208);
+  transform: translateY(-8px);
+  border-color: rgba(155, 155, 155, 0.12);
+  transition: all 0.3s ease;
+}
+
+/* Cars Section */
+.cars-section {
+  padding: 60px 0;
+  background: transparent;
+  color: #e6eef8;
+  width: 100%;
+}
+
+.section-title {
+  font-weight: 700;
+  color: #e6eef8;
+  font-size: 2rem;
+}
+
+.car-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.car-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 50px rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.3);
+}
+
+.car-card .card-img-top {
+  height: 220px;
+  object-fit: cover;
+}
+
+.car-card .card-title {
+  color: #fff;
+  font-weight: 600;
+}
+
+.car-card .card-text {
+  color: #cbd5e1;
+}
+
+/* Full page wrapper */
+.profile-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;             /* vertically center content */
+  justify-content: center;         /* horizontally center content */
+  background: #fff;                /* page background (white) */
+  padding: 40px 20px;              /* breathing room on small screens */
+  box-sizing: border-box;
+}
+
+/* container limits width but not card-like visuals */
+.profile-container {
+  width: 100%;
+  max-width: 1150px;               /* adjust as needed */
+}
+
+/* Alerts area sits above the grid and is full width of container */
+.profile-alerts {
+  margin-bottom: 18px;
+}
+
+/* Grid: left profile summary + right form */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr; /* left column fixed, right fluid */
+  gap: 28px;
+  align-items: start;
+  width: 100%;
+}
+
+/* LEFT column */
+.profile-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;             /* center contents horizontally */
+  text-align: center;
+}
+
+/* profile picture */
+.profile-pic-wrap {
+  width: 220px;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6f7fb;
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* placeholder avatar */
+.profile-avatar.placeholder {
+  font-size: 64px;
+  color: #9aa3b2;
+  background: transparent;
+}
+
+/* meta text */
+.profile-name {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.profile-email {
+  margin: 0;
+  color: #6c757d;
+}
+
+/* left column quick actions */
+.profile-actions {
+  width: 100%;
+}
+
+/* RIGHT column (form) */
+.profile-right {
+  width: 100%;
+}
+
+/* form sections */
+.form-section {
+  margin-bottom: 22px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.section-title {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: #000000; /* bootstrap primary */
+  font-weight: 700;
+}
+
+/* form inputs: slightly larger */
+.form-control.form-control-lg {
+  padding: 12px 14px;
+  font-size: 1rem;
+}
+
+/* actions area */
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* responsive: stack on smaller screens */
+@media (max-width: 991px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .profile-left {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    justify-content: flex-start;
+  }
+
+  .profile-pic-wrap {
+    width: 100px;
+    height: 100px;
+    border-radius: 999px;
+  }
+
+  .profile-name {
+    font-size: 1.1rem;
+  }
+
+  .profile-actions {
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .form-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .profile-page {
+    padding: 20px;
+  }
+}
+
+
+/* Price Ribbon */
+.price-ribbon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(90deg, #06b6d4, #2dd4bf);
+  color: #02121a;
+  padding: 8px 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.25);
+}
+
+/* Chips/Filters */
+.chips {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #cbd5e1;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.chip-active {
+  background: linear-gradient(90deg, #06b6d4, #2dd4bf);
+  color: #02121a;
+  border: none;
+  box-shadow: 0 6px 20px rgba(45, 212, 191, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+  background: black;
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: white;
+  color: black;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(32, 31, 31, 0.3);
+}
+
+.btn-outline-primary {
+  border: 1px solid black;
+  color: black;
+}
+
+.btn-outline-primary:hover {
+  background: black;
+  border-color: black;
+  color: white;
+}
+.btn-outline-secondary:hover {
+  background: black;
+  color: white;
+}
+
+/* Sections */
+.about-strip {
+  background: linear-gradient(90deg, #0a1420, #0f1729);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #dbeafe;
+  padding: 50px 0;
+}
+
+.contact-strip {
+  background: linear-gradient(90deg, #020617, #0a1420);
+  color: #9aa7b7;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding: 50px 0;
+}
+
+/* Form Controls */
+.form-control {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #06b6d4;
+  color: #fff;
+  box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.15);
+}
+
+.form-control::placeholder {
+  color: #3e4144;
+}
+
+.form-label {
+  color: #424446;
+  font-weight: 500;
+}
+.container1 {
+    padding-left: 40px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-right: 0px;
+  }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+  }
+
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .container1 {
+    padding-left: 40px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-right: 0px;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-section {
+    padding: 60px 20px 30px;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .car-card .card-img-top {
+    height: 200px;
+  }
+
+  .cars-section {
+    padding: 40px 20px;
+  }
+
+  .chips {
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Typography */
+  .hero-title {
+    font-size: 1.6rem;
+  }
+
+  .hero-sub {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+  }
+
+  h1 {
+    font-size: 1.8rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h4, h5 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Spacing */
+  .hero-section {
+    padding: 40px 15px 20px;
+  }
+
+  .cars-section {
+    padding: 30px 15px;
+  }
+
+  .about-strip,
+  .contact-strip {
+    padding: 30px 15px;
+  }
+
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* Cards */
+  .car-card .card-img-top {
+    height: 180px;
+  }
+
+  .card {
+    margin-bottom: 15px;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.95rem;
+    padding: 8px 16px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .btn-group,
+  .d-flex.gap-3 {
+    flex-direction: column;
+    gap: 10px !important;
+  }
+
+  /* Forms */
+  .form-control {
+    font-size: 1rem;
+    padding: 10px 12px;
+  }
+
+  .form-label {
+    font-size: 0.95rem;
+  }
+
+  /* Navigation */
+  
+  .navbar {
+    padding: 10px 0;
+    background-color: white;
+  }
+
+  .navbar-brand {
+    font-size: 1.3rem !important;
+    font-weight: bold;
+    padding-left: 40px;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  .nav-link {
+    font-size: 1.5rem;
+    padding: 5px 0 !important;
+  }
+
+  /* Chips */
+  .chips {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .hero-card {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Typography - Extra Small */
+  html {
+    font-size: 14px;
+  }
+
+  .hero-title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  .hero-sub {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.3rem !important;
+  }
+
+  h4 {
+    font-size: 1rem !important;
+  }
+
+  /* Spacing */
+  .hero-section {
+    padding: 30px 12px 15px;
+  }
+
+  .cars-section {
+    padding: 20px 12px;
+  }
+
+  .about-strip,
+  .contact-strip {
+    padding: 20px 12px;
+  }
+
+  .py-5 {
+    padding: 20px 0 !important;
+  }
+
+  .py-4 {
+    padding: 15px 0 !important;
+  }
+
+  .py-3 {
+    padding: 10px 0 !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 15px !important;
+  }
+
+  .mb-3 {
+    margin-bottom: 12px !important;
+  }
+
+  /* Cards */
+  .car-card .card-img-top {
+    height: 160px;
+  }
+
+  .card-body {
+    padding: 12px;
+  }
+
+  .price-ribbon {
+    top: 8px;
+    left: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    width: 100%;
+    margin-bottom: 8px;
+    min-height: 44px;
+  }
+
+  .btn-group {
+    gap: 8px !important;
+  }
+
+  /* Forms */
+  .form-control {
+    font-size: 16px;
+    padding: 10px 10px;
+    border-radius: 6px;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  input[type="date"],
+  input[type="email"],
+  input[type="text"],
+  input[type="tel"],
+  input[type="password"],
+  textarea,
+  select {
+    width: 100%;
+  }
+
+  /* Navigation */
+  .navbar-brand {
+    font-size: 1.2rem !important;
+  }
+
+  .nav {
+    gap: 6px !important;
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 4px 0 !important;
+  }
+
+  /* Chips */
+  .chips {
+    gap: 4px;
+  }
+
+  .chip {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* Grid adjustments */
+  .row {
+    --bs-gutter-x: 0.75rem;
+  }
+
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Stack columns on mobile */
+  [class*="col-"] {
+    min-width: 100%;
+  }
+
+  /* Hide elements on very small screens if needed */
+  .d-none-mobile {
+    display: none !important;
+  }
+
+  /* Reduce shadows on mobile for performance */
+  .shadow-lg,
+  .shadow-sm {
+    box-shadow: none !important;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 41, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: black;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: gray;
+}
+
+/* Loading Skeleton */
+.skeleton-card {
+  height: 320px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
