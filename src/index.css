@@ -9,8 +9,27 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
-  color: black;
-  background-color: white;
+  
+  /* Modern Color Palette */
+  --primary-color: #0066cc;
+  --primary-dark: #004b99;
+  --primary-light: #1a7fff;
+  --accent-color: #ff8c42;
+  --accent-dark: #e67e22;
+  --accent-light: #ffb366;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --dark-bg: #0f172a;
+  --dark-surface: #1e293b;
+  --dark-border: #334155;
+  --light-bg: #f8fafc;
+  --light-text: #1e293b;
+  --text-secondary: #64748b;
+  --border-light: #e2e8f0;
+  
+  color: var(--light-text);
+  background-color: var(--light-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -28,8 +47,9 @@ body {
   margin: 0;
   width: 100%;
   min-height: 100vh;
-  background: white;
+  background: var(--light-bg);
   background-attachment: fixed;
+  color: var(--light-text);
 }
 
 #root {
@@ -40,12 +60,14 @@ body {
 
 a {
   font-weight: 500;
-  color: black;
+  color: var(--primary-color);
   text-decoration: inherit;
+  transition: color 0.3s ease;
 }
 
 a:hover {
-  color: black;
+  color: var(--primary-dark);
+  text-decoration: underline;
 }
 
 h1 {
@@ -58,15 +80,19 @@ button {
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
 }
 
 button:hover {
-  border-color: black;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
 button:focus,
@@ -76,13 +102,14 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--light-text);
+    background-color: var(--light-bg);
   }
   a:hover {
-    color: black;
+    color: var(--primary-dark);
   }
   button {
-    background-color: #f9f9f9;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
   }
 }
