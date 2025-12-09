@@ -24,10 +24,10 @@ export function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(userWithRole))
   }
 
-  const register = (userData) => {
+  const register = (userData, role = 'customer') => {
     const userWithRole = {
       ...userData,
-      role: 'customer' // New registrations are always customers
+      role: role // Can be 'customer' or 'vendor'
     }
     setUser(userWithRole)
     localStorage.setItem('user', JSON.stringify(userWithRole))

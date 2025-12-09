@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
 import BlankLayout from './layouts/BlankLayout'
 import AdminLayout from './layouts/AdminLayout'
+import VendorLayout from './layouts/VendorLayout'
 import HomePage from './pages/Home/HomePage'
 import CarsPage from './pages/Cars/CarsPage'
 import CarDetailsPage from './pages/Cars/CarDetailsPage'
@@ -19,6 +20,11 @@ import AdminBookingsPage from './pages/Admin/AdminBookingsPage'
 import AdminUsersPage from './pages/Admin/AdminUsersPage'
 import AdminReportsPage from './pages/Admin/AdminReportsPage'
 import AdminSettingsPage from './pages/Admin/AdminSettingsPage'
+import VendorDashboard from './pages/Vendor/VendorDashboard'
+import VendorBookings from './pages/Vendor/VendorBookings'
+import VendorCars from './pages/Vendor/VendorCars'
+import VendorRevenue from './pages/Vendor/VendorRevenue'
+import VendorSettings from './pages/Vendor/VendorSettings'
 
 function App() {
   return (
@@ -49,6 +55,15 @@ function App() {
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/reports" element={<AdminReportsPage />} />
         <Route path="/admin/settings" element={<AdminSettingsPage />} />
+      </Route>
+
+      {/* Vendor Routes */}
+      <Route element={<VendorLayout />}>
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor/cars" element={<VendorCars />} />
+        <Route path="/vendor/bookings" element={<VendorBookings />} />
+        <Route path="/vendor/revenue" element={<VendorRevenue />} />
+        <Route path="/vendor/settings" element={<VendorSettings />} />
       </Route>
     </Routes>
   )

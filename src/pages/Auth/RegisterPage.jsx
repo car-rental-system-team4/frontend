@@ -3,12 +3,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function RegisterPage() {
+  const [userType, setUserType] = useState('customer') // 'customer' or 'vendor'
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    businessName: '',
+    businessAddress: ''
   })
   const [error, setError] = useState('')
   const { register } = useAuth()
@@ -28,7 +31,12 @@ export default function RegisterPage() {
 
     // Validation
     if (!formData.fullName || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields')
+      setError('Please fill in all required fields')
+      return
+    }
+
+    if (userType === 'vendor' && (!formData.businessName || !formData.businessAddress)) {
+      setError('Please fill in all business information')
       return
     }
 
@@ -48,10 +56,20 @@ export default function RegisterPage() {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        registeredAt: new Date().toISOString()
+        registeredAt: new Date().toISOString(),
+        ...(userType === 'vendor' && {
+          businessName: formData.businessName,
+          businessAddress: formData.businessAddress
+        })
       }
-      register(userData)
-      navigate('/')
+      register(userData, userType)
+      
+      // Redirect based on user type
+      if (userType === 'vendor') {
+        navigate('/vendor/dashboard')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       setError('Registration failed. Please try again.')
     }
@@ -59,9 +77,9 @@ export default function RegisterPage() {
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light py-5">
-      <div className="card1 shadow-lg" style={{ width: '100%', maxWidth: '450px', margin: '20px' }}>
+      <div className="card1 shadow-lg" style={{ width: '100%', maxWidth: '550px', margin: '20px' }}>
         <div className="card-body p-5">
-          <h2 className="text-center mb-4 fw-bold">RentYourCar</h2>
+          <h2 className="text-center mb-2 fw-bold">RentYourCar</h2>
           <h4 className="text-center mb-4">Create Account</h4>
 
           {error && (
@@ -70,7 +88,40 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* User Type Selection */}
+          <div className="user-type-selector mb-4">
+            <label className="form-label">I want to register as:</label>
+            <div className="btn-group w-100" role="group">
+              <input 
+                type="radio" 
+                className="btn-check" 
+                name="userType" 
+                id="customer" 
+                value="customer"
+                checked={userType === 'customer'}
+                onChange={(e) => setUserType(e.target.value)}
+              />
+              <label className="btn btn-outline-primary" htmlFor="customer">
+                👤 Customer
+              </label>
+
+              <input 
+                type="radio" 
+                className="btn-check" 
+                name="userType" 
+                id="vendor" 
+                value="vendor"
+                checked={userType === 'vendor'}
+                onChange={(e) => setUserType(e.target.value)}
+              />
+              <label className="btn btn-outline-primary" htmlFor="vendor">
+                🚗 Vendor
+              </label>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit}>
+            {/* Common Fields */}
             <div className="mb-3">
               <label htmlFor="fullName" className="form-label">Full Name</label>
               <input
@@ -112,6 +163,45 @@ export default function RegisterPage() {
                 required
               />
             </div>
+
+            {/* Vendor-specific Fields */}
+            {userType === 'vendor' && (
+              <>
+                <div className="alert alert-info mb-3">
+                  <small>
+                    <strong>Vendor Registration:</strong> Complete your business details to start renting cars.
+                  </small>
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="businessName" className="form-label">Business Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="businessName"
+                    name="businessName"
+                    placeholder="Enter your business name"
+                    value={formData.businessName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="businessAddress" className="form-label">Business Address</label>
+                  <textarea
+                    className="form-control"
+                    id="businessAddress"
+                    name="businessAddress"
+                    placeholder="Enter your business address"
+                    rows="2"
+                    value={formData.businessAddress}
+                    onChange={handleChange}
+                    required
+                  ></textarea>
+                </div>
+              </>
+            )}
 
             <div className="mb-3">
               <label htmlFor="password" className="form-label">Password</label>
