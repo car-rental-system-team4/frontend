@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   ]);
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Completed':
         return <span className="badge bg-success">Completed</span>;
       case 'Pending':
@@ -114,10 +114,10 @@ export default function AdminDashboard() {
             </div>
             <div className="card-body">
               <div className="d-grid gap-2">
-                <button className="btn btn-outline-primary">➕ Add New Car</button>
-                <button className="btn btn-outline-primary">📋 View All Bookings</button>
-                <button className="btn btn-outline-primary">👥 Manage Users</button>
-                <button className="btn btn-outline-primary">📊 Generate Reports</button>
+                <button className="btn btn-outline-dark text-start">➕ Add New Car</button>
+                <button className="btn btn-outline-dark text-start">📋 View All Bookings</button>
+                <button className="btn btn-outline-dark text-start">👥 Manage Users</button>
+                <button className="btn btn-outline-dark text-start">📊 Generate Reports</button>
               </div>
             </div>
           </div>
@@ -165,8 +165,8 @@ export default function AdminDashboard() {
 
       {/* Recent Bookings */}
       <div className="card shadow-sm border-0">
-        <div className="card-header bg-dark text-white">
-          <h5 className="mb-0">📋 Recent Bookings</h5>
+        <div className="card-header bg-light text-dark border-bottom">
+          <h5 className="mb-0 fw-bold">📋 Recent Bookings</h5>
         </div>
         <div className="card-body p-0">
           <div className="table-responsive">
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
                     <td>{getStatusBadge(booking.status)}</td>
                     <td><strong>₹{booking.amount.toLocaleString()}</strong></td>
                     <td>
-                      <button className="btn btn-sm btn-outline-primary">View</button>
+                      <button className="btn btn-sm btn-outline-dark">View</button>
                     </td>
                   </tr>
                 ))}
