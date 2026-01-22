@@ -6,51 +6,42 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if user is logged in (from localStorage)
   useEffect(() => {
+    // 1. Check for existing session on page load
     const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    const storedToken = localStorage.getItem('token')
+
+    if (storedUser && storedToken) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (error) {
+        console.error("Failed to parse user data", error)
+        localStorage.clear() // Clear corrupted data
+      }
     }
     setLoading(false)
   }, [])
 
+  // 2. Login: Only called AFTER Backend gives us a Token
   const login = (userData) => {
-    const userWithRole = {
-      ...userData,
-      role: userData.role || 'customer' // Default to customer if not specified
-    }
-    setUser(userWithRole)
-    localStorage.setItem('user', JSON.stringify(userWithRole))
+    setUser(userData)
+    
+    
+    localStorage.setItem('user', JSON.stringify(userData))
   }
 
-  const register = (userData, role = 'customer') => {
-    const userWithRole = {
-      ...userData,
-      role: role // Can be 'customer' or 'vendor'
-    }
-    setUser(userWithRole)
-    localStorage.setItem('user', JSON.stringify(userWithRole))
-  }
-
-  const updateProfile = (updatedUserData) => {
-    const updatedUser = { ...user, ...updatedUserData }
-    setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-  }
-
+  // 3. Logout: Clears everything
   const logout = () => {
     setUser(null)
     localStorage.removeItem('user')
+    localStorage.removeItem('token') // CRITICAL: Remove the security key
+    window.location.href = '/login'
   }
 
-  const deleteProfile = () => {
-    setUser(null)
-    localStorage.removeItem('user')
-  }
+ 
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, deleteProfile, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
