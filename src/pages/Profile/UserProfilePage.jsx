@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function UserProfilePage() {
-  const { user, updateProfile, deleteProfile } = useAuth();
+  // 1. Get user and logout 
+  const { user, logout } = useAuth(); 
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -11,378 +12,175 @@ export default function UserProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  // 2. Initialize State with user data if available
+  
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    profilePic: user?.profilePic || '',
-    aadharId: user?.aadharId || '',
-    drivingLicense: user?.drivingLicense || '',
-    address: user?.address || '',
-    city: user?.city || '',
-    state: user?.state || '',
-    zipCode: user?.zipCode || '',
+    name: '',
+    email: '',
+    phoneNo: '',
+    licenseNo: '',
+    aadharNo: '',
+    houseNo: '',
+    buildingName: '',
+    streetName: '',
+    area: '',
+    pincode: '',
   });
+
+  // Sync state when 'user' loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phoneNo: user.phoneNo || '',
+        licenseNo: user.licenseNo || '',
+        aadharNo: user.aadharNo || '',
+        houseNo: user.houseNo || '',
+        buildingName: user.buildingName || '',
+        streetName: user.streetName || '',
+        area: user.area || '',
+        pincode: user.pincode || '',
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setErrorMessage('');
-  };
-
-  const handleProfilePicChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          profilePic: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      setErrorMessage('Full Name is required');
-      return false;
-    }
-    if (!formData.email.trim()) {
-      setErrorMessage('Email is required');
-      return false;
-    }
-    if (!formData.phone.trim()) {
-      setErrorMessage('Phone number is required');
-      return false;
-    }
-    if (!formData.aadharId.trim()) {
-      setErrorMessage('Aadhar ID is required');
-      return false;
-    }
-    if (!formData.drivingLicense.trim()) {
-      setErrorMessage('Driving License number is required');
-      return false;
-    }
-    if (!formData.address.trim()) {
-      setErrorMessage('Address is required');
-      return false;
-    }
-    if (!formData.city.trim()) {
-      setErrorMessage('City is required');
-      return false;
-    }
-    if (!formData.state.trim()) {
-      setErrorMessage('State is required');
-      return false;
-    }
-    if (!formData.zipCode.trim()) {
-      setErrorMessage('Zip Code is required');
-      return false;
-    }
-    return true;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSaveProfile = () => {
-    if (validateForm()) {
-      updateProfile(formData);
-      setIsEditing(false);
-      setSuccessMessage('Profile updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    }
+    // Since we don't have an Update API yet, show a message
+    alert("Profile Update API is not yet connected.");
+    setIsEditing(false);
   };
 
   const handleDeleteProfile = () => {
-    if (window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
-      deleteProfile();
-      navigate('/');
+    if (window.confirm('Are you sure?')) {
+      alert("Delete API is not yet connected.");
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   if (!user) {
     return (
-      <div className="container py-5">
-        <div className="alert alert-warning text-center">
-          <h5>Please log in to view your profile</h5>
-        </div>
+      <div className="container py-5 text-center">
+        <div className="alert alert-warning">Please log in to view your profile</div>
       </div>
     );
   }
 
   return (
-  <main className="profile-page">
-    <div className="profile-container">
+    <main className="profile-page py-5 bg-light">
+      <div className="container">
+        
+        {/* Header Section */}
+        <div className="row mb-4">
+            <div className="col-12 d-flex justify-content-between align-items-center">
+                <h2>My Profile</h2>
+                <button className="btn btn-outline-danger" onClick={handleLogout}>Logout</button>
+            </div>
+        </div>
 
-      {/* Alerts (full width above content) */}
-      <div className="profile-alerts">
-        {successMessage && (
-          <div className="alert alert-success alert-dismissible fade show" role="alert">
-            {successMessage}
-            <button type="button" className="btn-close" onClick={() => setSuccessMessage('')}></button>
-          </div>
-        )}
-        {errorMessage && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
-            {errorMessage}
-            <button type="button" className="btn-close" onClick={() => setErrorMessage('')}></button>
-          </div>
-        )}
-      </div>
-
-      {/* Main content: left profile column + right form column */}
-      <section className="profile-grid">
-
-        {/* LEFT: Profile summary / picture / quick actions */}
-        <aside className="profile-left">
-          <div className="profile-pic-wrap">
-            {formData.profilePic ? (
-              <img
-                src={formData.profilePic}
-                alt="Profile"
-                className="profile-avatar"
-              />
-            ) : (
-              <div className="profile-avatar placeholder">👤</div>
-            )}
-          </div>
-
-          <div className="profile-meta">
-            <h2 className="profile-name">{formData.fullName || 'Your Name'}</h2>
-            <p className="profile-email">{formData.email || 'you@example.com'}</p>
-          </div>
-
-          <div className="profile-actions">
-            {isEditing ? (
-              <button
-                type="button"
-                className="btn btn-outline-primary w-100"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Change Photo
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-outline-primary w-100"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit Profile
-              </button>
-            )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleProfilePicChange}
-              accept="image/*"
-              style={{ display: 'none' }}
-            />
-
-            <button
-              type="button"
-              className="btn btn-danger w-100 mt-2"
-              onClick={handleDeleteProfile}
-            >
-              🗑 Delete Profile
-            </button>
-          </div>
-        </aside>
-
-        {/* RIGHT: Full form (no card) */}
-        <div className="profile-right">
-          <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
-            <section className="form-section">
-              <h4 className="section-title">Personal Information</h4>
-
-              <div className="row gx-3">
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Full Name</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Email</label>
-                  <input
-                    type="email"
-                    className="form-control form-control-lg"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Phone Number</label>
-                  <input
-                    type="tel"
-                    className="form-control form-control-lg"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="10-digit phone number"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="form-section">
-              <h4 className="section-title">Document Information</h4>
-
-              <div className="row gx-3">
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Aadhar ID</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="aadharId"
-                    value={formData.aadharId}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="12-digit Aadhar number"
-                  />
-                </div>
-
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Driving License Number</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="drivingLicense"
-                    value={formData.drivingLicense}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Driving License number"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="form-section">
-              <h4 className="section-title">Address Information</h4>
-
+        <div className="row">
+          {/* LEFT: Profile Card */}
+          <div className="col-lg-4 mb-4">
+            <div className="card shadow-sm text-center p-4">
               <div className="mb-3">
-                <label className="form-label fw-bold">Address</label>
-                <textarea
-                  className="form-control form-control-lg"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  rows="3"
-                  placeholder="Enter your full address"
-                ></textarea>
+                 {/* Placeholder for Image */}
+                 <div className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto" style={{width: '100px', height: '100px', fontSize: '2rem'}}>
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                 </div>
               </div>
-
-              <div className="row gx-3">
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">City</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">State</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="col-12 col-md-6 mb-3">
-                  <label className="form-label fw-bold">Zip Code</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="6-digit zip code"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Actions (Save / Cancel) - sticky bottom on large screens */}
-            <div className="form-actions mt-4">
-              {!isEditing ? (
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    ✎ Edit Profile
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-lg"
-                    onClick={handleDeleteProfile}
-                  >
-                    🗑 Delete Profile
-                  </button>
-                </div>
-              ) : (
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-success btn-lg"
-                    onClick={handleSaveProfile}
-                  >
-                    ✓ Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-lg"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setFormData({
-                        fullName: user?.fullName || '',
-                        email: user?.email || '',
-                        phone: user?.phone || '',
-                        profilePic: user?.profilePic || '',
-                        aadharId: user?.aadharId || '',
-                        drivingLicense: user?.drivingLicense || '',
-                        address: user?.address || '',
-                        city: user?.city || '',
-                        state: user?.state || '',
-                        zipCode: user?.zipCode || '',
-                      });
-                      setErrorMessage('');
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
+              <h4>{formData.name}</h4>
+              <p className="text-muted">{user.role}</p>
+              
+              {!isEditing && (
+                <button className="btn btn-primary w-100" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </button>
               )}
             </div>
-          </form>
+          </div>
+
+          {/* RIGHT: Form */}
+          <div className="col-lg-8">
+            <div className="card shadow-sm p-4">
+              <form onSubmit={(e) => e.preventDefault()}>
+                
+                {/* Personal Info */}
+                <h5 className="mb-3 text-primary">Personal Information</h5>
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Full Name</label>
+                        <input type="text" className="form-control" name="name" value={formData.name} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Email</label>
+                        <input type="email" className="form-control" value={formData.email} disabled /> {/* Email usually cannot be changed */}
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Phone</label>
+                        <input type="text" className="form-control" name="phoneNo" value={formData.phoneNo} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                </div>
+
+                {/* Identity Info */}
+                <h5 className="mb-3 mt-3 text-primary">Identity Details</h5>
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Aadhar Number</label>
+                        <input type="text" className="form-control" name="aadharNo" value={formData.aadharNo} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Driving License</label>
+                        <input type="text" className="form-control" name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                </div>
+
+                {/* Address Info */}
+                <h5 className="mb-3 mt-3 text-primary">Address Details</h5>
+                <div className="row">
+                    <div className="col-md-4 mb-3">
+                        <label className="form-label">House No</label>
+                        <input type="text" className="form-control" name="houseNo" value={formData.houseNo} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-8 mb-3">
+                        <label className="form-label">Building Name</label>
+                        <input type="text" className="form-control" name="buildingName" value={formData.buildingName} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label">Street</label>
+                        <input type="text" className="form-control" name="streetName" value={formData.streetName} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                        <label className="form-label">Area</label>
+                        <input type="text" className="form-control" name="area" value={formData.area} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                        <label className="form-label">Pincode</label>
+                        <input type="text" className="form-control" name="pincode" value={formData.pincode} onChange={handleInputChange} disabled={!isEditing} />
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                {isEditing && (
+                    <div className="d-flex gap-2 mt-4">
+                        <button className="btn btn-success" onClick={handleSaveProfile}>Save Changes</button>
+                        <button className="btn btn-secondary" onClick={() => setIsEditing(false)}>Cancel</button>
+                    </div>
+                )}
+
+              </form>
+            </div>
+          </div>
         </div>
-      </section>
-    </div>
-  </main>
-);
+      </div>
+    </main>
+  );
 }
