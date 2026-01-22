@@ -1,134 +1,65 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { login as apiLogin } from '../../services/api' // Import API
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const { login } = useAuth()
+  const [loading, setLoading] = useState(false)
+  
+  const { login: authLogin } = useAuth() 
   const navigate = useNavigate()
 
-  // Demo credentials
-  const ADMIN_CREDENTIALS = {
-    email: 'admin@rentcar.com',
-    password: 'admin123'
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setSuccessMessage('')
+    setLoading(true)
 
-    // Basic validation
-    if (!email || !password) {
-      setError('Please fill in all fields')
-      return
+    try {
+      // 1. Call Backend
+      const response = await apiLogin({ email, password })
+      const data = response.data
+
+      // 2. Save to Context
+      authLogin(data)
+
+      // 3. Redirect based on Role 
+      if (data.role === 'ADMIN') navigate('/admin/dashboard')
+      else if (data.role === 'VENDOR') navigate('/vendor/dashboard')
+      else navigate('/') // Customer
+
+    } catch (err) {
+      setError('Invalid credentials')
+    } finally {
+      setLoading(false)
     }
-
-    // Check if admin credentials
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-      const adminData = {
-        email,
-        fullName: 'Admin User',
-        role: 'admin',
-        loginTime: new Date().toISOString()
-      }
-      login(adminData)
-      setSuccessMessage('Admin login successful! Redirecting...')
-      setTimeout(() => navigate('/admin/dashboard'), 1500)
-      return
-    }
-
-    // Regular customer login
-    if (email && password.length >= 6) {
-      const userData = {
-        email,
-        fullName: email.split('@')[0],
-        role: 'customer',
-        loginTime: new Date().toISOString()
-      }
-      login(userData)
-      setSuccessMessage('Login successful! Redirecting...')
-      setTimeout(() => navigate('/'), 1500)
-      return
-    }
-
-    setError('Invalid email or password. (Tip: Use admin@rentcar.com / admin123 for admin)')
   }
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-      <div className="card1 shadow-lg" style={{ width: '100%', maxWidth: '400px', margin: '20px' }}>
-        <div className="card-body p-5">
-          <h2 className="text-center mb-4 fw-bold">RentYourCar</h2>
-          <h4 className="text-center mb-4">Login</h4>
-
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="alert alert-success" role="alert">
-              {successMessage}
-            </div>
-          )}
-
+      <div className="card shadow p-5" style={{ maxWidth: '400px', width: '100%' }}>
+          <h2 className="text-center mb-4">Login</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <label>Email</label>
+              <input type="email" className="form-control" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-
             <div className="mb-3">
-              <label htmlFor="password" className="form-label">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <label>Password</label>
+              <input type="password" className="form-control" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
-
-            <button type="submit" className="btn btn-primary w-100 mb-3">
-              Login
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          <div className="text-center mb-3">
-            <Link to="/forgot-password" className="text-decoration-none text-muted small">Forgot Password?</Link>
+          
+          <div className="text-center mt-3">
+            <Link to="/register">Create an account</Link>
           </div>
-
-          <hr />
-
-          {/* Demo Credentials Info */}
-          <div className="alert alert-info small mb-3">
-            <strong>Demo Admin:</strong><br/>
-            Email: admin@rentcar.com<br/>
-            Password: admin123
-          </div>
-
-          <div className="text-center">
-            <p className="text-muted small mb-2">Don't have an account?</p>
-            <Link to="/register" className="btn btn-outline-primary w-100">
-              Register Here
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   )
