@@ -24,18 +24,19 @@ api.interceptors.request.use(
 // --- API Functions ---
 
 // Auth
-export const signup = (userData) => api.post("/auth/register", userData); 
-export const login = (loginData) => api.post("/auth/login", loginData);   
+export const signup = (userData) => api.post("/auth/register", userData);
+export const login = (loginData) => api.post("/auth/login", loginData);
 
 // Users
-export const getMyProfile = () => api.get("/users/profile");     
-export const updateProfile = (userData) => api.put("/users/profile", userData); 
+export const getMyProfile = () => api.get("/users/profile");
+export const updateProfile = (userData) => api.put("/auth/profile", userData);
+export const deleteProfile = () => api.delete("/auth/profile");
 
 // Cars (For Admin & Customer)
-export const getAllCars = () => api.get("/cars"); 
-export const addVehicle = (vehicleData) => api.post("/vehicles", vehicleData); 
+export const getAllCars = () => api.get("/cars");
+export const addVehicle = (vehicleData) => api.post("/vehicles", vehicleData);
 
 // Bookings
-export const createBooking = (bookingData) => api.post("/bookings", bookingData); 
+export const createBooking = (bookingData) => api.post("/bookings", bookingData);
 
 export default api;

@@ -8,11 +8,11 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  // Matches your Java DTO exactly
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phoneNo: '',
     password: '',
     confirmPassword: '',
     
@@ -24,7 +24,6 @@ export default function RegisterPage() {
     streetName: '',
     area: '',
     pincode: '',
-    
     gender: 'MALE'
   })
 

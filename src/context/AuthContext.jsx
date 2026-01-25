@@ -1,34 +1,39 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-
-const AuthContext = createContext()
+import { useState } from 'react'
+import { AuthContext } from './authContext'
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // 1. Check for existing session on page load
-    const storedUser = localStorage.getItem('user')
-    const storedToken = localStorage.getItem('token')
-
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error("Failed to parse user data", error)
-        localStorage.clear() // Clear corrupted data
+  // Use lazy initialization to avoid setState in useEffect
+  const [user, setUser] = useState(() => {
+    // Initialize user from localStorage only once during initial render
+    try {
+      const storedUser = localStorage.getItem('user')
+      const storedToken = localStorage.getItem('token')
+      
+      if (storedUser && storedToken) {
+        return JSON.parse(storedUser)
       }
+    } catch (error) {
+      console.error("Failed to parse user data", error)
+      localStorage.clear() // Clear corrupted data
     }
-    setLoading(false)
-  }, [])
+    return null
+  })
+  
+  // Loading is false since localStorage access is synchronous
+  const [loading] = useState(false)
 
   // 2. Login: Only called AFTER Backend gives us a Token
   const login = (userData) => {
     setUser(userData)
-    
-    
+    if (userData.token) localStorage.setItem('token', userData.token);
+    if (userData.jwt) localStorage.setItem('token', userData.jwt);
     localStorage.setItem('user', JSON.stringify(userData))
   }
+
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
 
   // 3. Logout: Clears everything
   const logout = () => {
@@ -38,19 +43,11 @@ export function AuthProvider({ children }) {
     window.location.href = '/login'
   }
 
- 
+
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
 }
