@@ -1,10 +1,11 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 
 export default function VendorLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Redirect to login if not authenticated or not a vendor
   useEffect(() => {
@@ -54,23 +55,23 @@ export default function VendorLayout() {
         <ul className="vendor-nav-menu">
           {navItems.map(item => (
             <li key={item.path}>
-              <a 
-                href={item.path}
+              <Link
+                to={item.path}
                 className={`vendor-nav-link ${location.pathname === item.path ? 'active' : ''}`}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
 
         <div className="vendor-sidebar-footer">
-          <a href="/profile" className="vendor-nav-link">
+          <Link to="/profile" className="vendor-nav-link">
             <span className="nav-icon">👤</span>
             <span className="nav-label">My Profile</span>
-          </a>
-          <button 
+          </Link>
+          <button
             onClick={handleLogout}
             className="vendor-nav-link btn-logout"
           >

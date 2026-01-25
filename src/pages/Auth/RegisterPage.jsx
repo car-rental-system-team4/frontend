@@ -1,250 +1,108 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { signup } from '../../services/api' // Import from api.js
 
 export default function RegisterPage() {
-  const [userType, setUserType] = useState('customer') // 'customer' or 'vendor'
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    businessName: '',
-    businessAddress: ''
-  })
+  const [userType, setUserType] = useState('CUSTOMER') 
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { register } = useAuth()
   const navigate = useNavigate()
 
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phoneNo: '',
+    password: '',
+    confirmPassword: '',
+    
+    // Identity & Address (From ER Diagram)
+    licenseNo: '',
+    aadharNo: '',
+    houseNo: '',
+    buildingName: '',
+    streetName: '',
+    area: '',
+    pincode: '',
+    gender: 'MALE'
+  })
+
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-
-    // Validation
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all required fields')
-      return
-    }
-
-    if (userType === 'vendor' && (!formData.businessName || !formData.businessAddress)) {
-      setError('Please fill in all business information')
-      return
-    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
+    // Combine form data with selected Role
+    const payload = { ...formData, role: userType }
 
-    // Simulate registration
+    setLoading(true)
     try {
-      const userData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        registeredAt: new Date().toISOString(),
-        ...(userType === 'vendor' && {
-          businessName: formData.businessName,
-          businessAddress: formData.businessAddress
-        })
-      }
-      register(userData, userType)
-      
-      // Redirect based on user type
-      if (userType === 'vendor') {
-        navigate('/vendor/dashboard')
-      } else {
-        navigate('/')
-      }
+      await signup(payload) // Calls /api/auth/register
+      alert("Registration Successful! Please Login.")
+      navigate('/login')
     } catch (err) {
-      setError('Registration failed. Please try again.')
+      setError(err.response?.data?.message || 'Registration failed')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light py-5">
-      <div className="card1 shadow-lg" style={{ width: '100%', maxWidth: '550px', margin: '20px' }}>
-        <div className="card-body p-5">
-          <h2 className="text-center mb-2 fw-bold">RentYourCar</h2>
-          <h4 className="text-center mb-4">Create Account</h4>
+    <div className="container py-5">
+      <div className="card shadow mx-auto" style={{ maxWidth: '800px' }}>
+        <div className="card-body p-4">
+          <h2 className="text-center fw-bold">Create Account</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
 
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
-
-          {/* User Type Selection */}
-          <div className="user-type-selector mb-4">
-            <label className="form-label">I want to register as:</label>
-            <div className="btn-group w-100" role="group">
-              <input 
-                type="radio" 
-                className="btn-check" 
-                name="userType" 
-                id="customer" 
-                value="customer"
-                checked={userType === 'customer'}
-                onChange={(e) => setUserType(e.target.value)}
-              />
-              <label className="btn btn-outline-primary" htmlFor="customer">
-                👤 Customer
-              </label>
-
-              <input 
-                type="radio" 
-                className="btn-check" 
-                name="userType" 
-                id="vendor" 
-                value="vendor"
-                checked={userType === 'vendor'}
-                onChange={(e) => setUserType(e.target.value)}
-              />
-              <label className="btn btn-outline-primary" htmlFor="vendor">
-                🚗 Vendor
-              </label>
+          {/* User Type Toggle */}
+          <div className="text-center mb-4">
+            <div className="btn-group">
+               <button type="button" className={`btn ${userType === 'CUSTOMER' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('CUSTOMER')}>Customer</button>
+               <button type="button" className={`btn ${userType === 'VENDOR' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('VENDOR')}>Vendor</button>
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Common Fields */}
-            <div className="mb-3">
-              <label htmlFor="fullName" className="form-label">Full Name</label>
-              <input
-                type="text"
-                className="form-control"
-                id="fullName"
-                name="fullName"
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-              />
+            <div className="row g-3">
+               {/* Personal Info */}
+               <div className="col-md-6"><label>Full Name</label><input name="name" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>Email</label><input name="email" type="email" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>Phone</label><input name="phone" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>Gender</label>
+                 <select name="gender" className="form-select" onChange={handleChange}>
+                   <option value="MALE">Male</option><option value="FEMALE">Female</option>
+                 </select>
+               </div>
+
+               {/* Identity */}
+               <div className="col-md-6"><label>Aadhar No</label><input name="aadharNo" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>License No</label><input name="licenseNo" className="form-control" onChange={handleChange} required /></div>
+
+               {/* Address */}
+               <div className="col-md-4"><label>House No</label><input name="houseNo" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-8"><label>Building Name</label><input name="buildingName" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>Street</label><input name="streetName" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-3"><label>Area</label><input name="area" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-3"><label>Pincode</label><input name="pincode" className="form-control" onChange={handleChange} required /></div>
+
+               {/* Password */}
+               <div className="col-md-6"><label>Password</label><input name="password" type="password" className="form-control" onChange={handleChange} required /></div>
+               <div className="col-md-6"><label>Confirm Password</label><input name="confirmPassword" type="password" className="form-control" onChange={handleChange} required /></div>
             </div>
 
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="phone" className="form-label">Phone Number</label>
-              <input
-                type="tel"
-                className="form-control"
-                id="phone"
-                name="phone"
-                placeholder="Enter your phone number"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {/* Vendor-specific Fields */}
-            {userType === 'vendor' && (
-              <>
-                <div className="alert alert-info mb-3">
-                  <small>
-                    <strong>Vendor Registration:</strong> Complete your business details to start renting cars.
-                  </small>
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="businessName" className="form-label">Business Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="businessName"
-                    name="businessName"
-                    placeholder="Enter your business name"
-                    value={formData.businessName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="businessAddress" className="form-label">Business Address</label>
-                  <textarea
-                    className="form-control"
-                    id="businessAddress"
-                    name="businessAddress"
-                    placeholder="Enter your business address"
-                    rows="2"
-                    value={formData.businessAddress}
-                    onChange={handleChange}
-                    required
-                  ></textarea>
-                </div>
-              </>
-            )}
-
-            <div className="mb-3">
-              <label htmlFor="password" className="form-label">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-              <small className="text-muted">Minimum 6 characters</small>
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-              <input
-                type="password"
-                className="form-control"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary w-100 mb-3">
-              Register
+            <button type="submit" className="btn btn-primary w-100 mt-4" disabled={loading}>
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </form>
-
-          <hr />
-
-          <div className="text-center">
-            <p className="text-muted small mb-2">Already have an account?</p>
-            <Link to="/login" className="btn btn-outline-primary w-100">
-              Login Here
-            </Link>
-          </div>
+          <div className="text-center mt-3"><Link to="/login">Already have an account? Login</Link></div>
         </div>
       </div>
     </div>

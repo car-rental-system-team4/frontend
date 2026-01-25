@@ -1,65 +1,53 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-
-const AuthContext = createContext()
+import { useState } from 'react'
+import { AuthContext } from './authContext'
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  // Check if user is logged in (from localStorage)
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+  // Use lazy initialization to avoid setState in useEffect
+  const [user, setUser] = useState(() => {
+    // Initialize user from localStorage only once during initial render
+    try {
+      const storedUser = localStorage.getItem('user')
+      const storedToken = localStorage.getItem('token')
+      
+      if (storedUser && storedToken) {
+        return JSON.parse(storedUser)
+      }
+    } catch (error) {
+      console.error("Failed to parse user data", error)
+      localStorage.clear() // Clear corrupted data
     }
-    setLoading(false)
-  }, [])
+    return null
+  })
+  
+  // Loading is false since localStorage access is synchronous
+  const [loading] = useState(false)
 
+  // 2. Login: Only called AFTER Backend gives us a Token
   const login = (userData) => {
-    const userWithRole = {
-      ...userData,
-      role: userData.role || 'customer' // Default to customer if not specified
-    }
-    setUser(userWithRole)
-    localStorage.setItem('user', JSON.stringify(userWithRole))
+    setUser(userData)
+    if (userData.token) localStorage.setItem('token', userData.token);
+    if (userData.jwt) localStorage.setItem('token', userData.jwt);
+    localStorage.setItem('user', JSON.stringify(userData))
   }
 
-  const register = (userData, role = 'customer') => {
-    const userWithRole = {
-      ...userData,
-      role: role // Can be 'customer' or 'vendor'
-    }
-    setUser(userWithRole)
-    localStorage.setItem('user', JSON.stringify(userWithRole))
-  }
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
 
-  const updateProfile = (updatedUserData) => {
-    const updatedUser = { ...user, ...updatedUserData }
-    setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-  }
-
+  // 3. Logout: Clears everything
   const logout = () => {
     setUser(null)
     localStorage.removeItem('user')
+    localStorage.removeItem('token') // CRITICAL: Remove the security key
+    window.location.href = '/login'
   }
 
-  const deleteProfile = () => {
-    setUser(null)
-    localStorage.removeItem('user')
-  }
+
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, deleteProfile, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
 }
