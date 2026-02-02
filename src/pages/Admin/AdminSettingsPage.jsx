@@ -1,6 +1,14 @@
 import { useState } from 'react';
+import { updateProfile } from '../../services/api';
+import { FaCog } from 'react-icons/fa';
 
 export default function AdminSettingsPage() {
+  const [loading, setLoading] = useState(false);
+  const [passwords, setPasswords] = useState({
+    currentFn: '',
+    newFn: ''
+  });
+
   const [formData, setFormData] = useState({
     siteName: 'RentYourCar',
     contactEmail: 'admin@rentyourcar.com',
@@ -19,12 +27,35 @@ export default function AdminSettingsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Settings saved successfully!');
+    alert('Settings saved successfully! (Note: These are local only)');
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    if (passwords.newFn.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await updateProfile({
+        currentPassword: passwords.currentFn,
+        password: passwords.newFn
+      });
+      alert('Password updated successfully!');
+      setPasswords({ currentFn: '', newFn: '' });
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data || 'Failed to update password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="container-fluid p-0">
-      <h1 className="fw-bold mb-4">⚙️ Settings</h1>
+      <h1 className="fw-bold mb-4"><FaCog className="me-2 text-primary" /> Settings</h1>
 
       <div className="row g-4">
         {/* General Settings */}
@@ -125,17 +156,32 @@ export default function AdminSettingsPage() {
               <h5 className="mb-0 fw-bold">Security</h5>
             </div>
             <div className="card-body">
-              <form className="row g-3 align-items-end">
+              <form className="row g-3 align-items-end" onSubmit={handlePasswordUpdate}>
                 <div className="col-md-4">
                   <label className="form-label">Current Password</label>
-                  <input type="password" className="form-control" />
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={passwords.currentFn}
+                    onChange={(e) => setPasswords({ ...passwords, currentFn: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">New Password</label>
-                  <input type="password" className="form-control" />
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={passwords.newFn}
+                    onChange={(e) => setPasswords({ ...passwords, newFn: e.target.value })}
+                    placeholder="Min 6 chars"
+                    required
+                  />
                 </div>
                 <div className="col-md-4">
-                  <button type="button" className="btn btn-warning">Update Password</button>
+                  <button type="submit" className="btn btn-warning" disabled={loading}>
+                    {loading ? 'Updating...' : 'Update Password'}
+                  </button>
                 </div>
               </form>
             </div>

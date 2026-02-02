@@ -24,14 +24,26 @@ export default function LoginPage() {
 
       // 2. Save to Context
       authLogin(data)
+      
+      console.log('Login successful, user data:', data)
+      console.log('User role:', data.role)
 
-      // 3. Redirect based on Role 
-      if (data.role === 'ADMIN') navigate('/admin/dashboard')
-      else if (data.role === 'VENDOR') navigate('/vendor/dashboard')
-      else navigate('/') // Customer
+      // 3. Redirect based on Role (use setTimeout to ensure state is updated)
+      setTimeout(() => {
+        const role = data.role?.toUpperCase()
+        console.log('Redirecting with role:', role)
+        if (role === 'ADMIN') {
+          navigate('/admin/dashboard', { replace: true })
+        } else if (role === 'VENDOR') {
+          navigate('/vendor/dashboard', { replace: true })
+        } else {
+          navigate('/', { replace: true }) // Customer
+        }
+      }, 100)
 
     } catch (err) {
-      setError('Invalid credentials')
+      console.error('Login error:', err)
+      setError(err.response?.data?.message || 'Invalid credentials')
     } finally {
       setLoading(false)
     }

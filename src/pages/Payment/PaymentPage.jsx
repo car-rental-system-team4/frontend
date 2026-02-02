@@ -1,22 +1,58 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context';
+import { createBooking, createPayment } from '../../services/api';
+import { FaCar, FaMobileAlt } from 'react-icons/fa';
 
 export default function PaymentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  const car = location.state?.car || null;
+
+  const car = location.state?.car || location.state?.vehicle || null;
+
+  // Helper function to get image path
+  const getImagePath = (imageUrl, make, model) => {
+    // If imageUrl is provided and is a full URL, use it
+    if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+      return imageUrl;
+    }
+
+    // If imageUrl is provided (just filename), use it
+    if (imageUrl) {
+      // Remove any leading slashes
+      const cleanUrl = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+      return `/vehicle-images/${cleanUrl}`;
+    }
+
+    // Fallback: Try to match based on make/model
+    const makeModel = `${make || ''}${model || ''}`.toLowerCase().replace(/\s+/g, '');
+    const imageMap = {
+      'hondaaccord': '/vehicle-images/Accord.jpg',
+      'marutiswift': '/vehicle-images/Swift.jpg',
+      'mahindraxuv500': '/vehicle-images/XUV500.jpg',
+      'mahindraxuv': '/vehicle-images/XUV.jpg',
+      'toyotafortuner': '/vehicle-images/Fortuner.jpg',
+      'hyundaicreta': '/vehicle-images/creta.jpg',
+      'tatanexon': '/vehicle-images/Nexon.jpg',
+      'marutimaruti': '/vehicle-images/Maruti.jpg'
+    };
+
+    // Try to find matching image
+    for (const [key, path] of Object.entries(imageMap)) {
+      if (makeModel.includes(key)) {
+        return path;
+      }
+    }
+
+    // Final fallback
+    return '/vehicle-images/Accord.jpg';
+  };
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: ''
-  });
+  const [pickupLocation, setPickupLocation] = useState('');
+  const [returnLocation, setReturnLocation] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,25 +76,8 @@ export default function PaymentPage() {
   };
 
   const days = calculateDays();
-  const totalCost = days > 0 ? days * car.basePricePerDay : 0;
-
-  const handleCardInputChange = (e) => {
-    const { name, value } = e.target;
-    let formattedValue = value;
-
-    if (name === 'cardNumber') {
-      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-    } else if (name === 'expiryDate') {
-      formattedValue = value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2').slice(0, 5);
-    } else if (name === 'cvv') {
-      formattedValue = value.replace(/\D/g, '').slice(0, 3);
-    }
-
-    setCardDetails(prev => ({
-      ...prev,
-      [name]: formattedValue
-    }));
-  };
+  const pricePerDay = car.basePricePerDay || car.pricePerDay || 0;
+  const totalCost = days > 0 ? days * pricePerDay : 0;
 
   const validatePayment = () => {
     setError('');
@@ -73,23 +92,16 @@ export default function PaymentPage() {
       return false;
     }
 
-    if (paymentMethod === 'card') {
-      if (!cardDetails.cardNumber || cardDetails.cardNumber.replace(/\s/g, '').length !== 16) {
-        setError('Please enter a valid 16-digit card number');
-        return false;
-      }
-      if (!cardDetails.cardHolder.trim()) {
-        setError('Please enter cardholder name');
-        return false;
-      }
-      if (!cardDetails.expiryDate || cardDetails.expiryDate.length !== 5) {
-        setError('Please enter valid expiry date (MM/YY)');
-        return false;
-      }
-      if (!cardDetails.cvv || cardDetails.cvv.length !== 3) {
-        setError('Please enter valid 3-digit CVV');
-        return false;
-      }
+    if (!upiId.trim()) {
+      setError('Please enter your UPI ID');
+      return false;
+    }
+
+    // Basic UPI ID validation (format: name@upi)
+    const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+    if (!upiPattern.test(upiId.trim())) {
+      setError('Please enter a valid UPI ID (e.g., yourname@paytm)');
+      return false;
     }
 
     return true;
@@ -98,37 +110,45 @@ export default function PaymentPage() {
   const handlePayment = async () => {
     if (!validatePayment()) return;
 
+    if (!pickupLocation.trim() || !returnLocation.trim()) {
+      setError('Please enter pickup and return locations');
+      return;
+    }
+
     setLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      const booking = {
-        bookingId: `BK${Date.now()}`,
-        carBrand: car.brand,
-        carModel: car.model,
-        carImage: car.img,
-        pickupLocation: 'Selected Location',
+    setError('');
+
+    try {
+      // Step 1: Create booking first
+      const bookingData = {
+        vehicleId: car.id || car.vehicleId || car.carId,
         pickupDate: pickupDate,
-        pickupTime: '10:00 AM',
-        dropoffLocation: 'Selected Location',
-        dropoffDate: dropoffDate,
-        dropoffTime: '6:00 PM',
-        totalDays: days,
-        costPerDay: car.basePricePerDay,
-        totalCost: totalCost,
-        status: 'Confirmed',
-        bookingDate: new Date().toISOString().split('T')[0],
-        paymentMethod: paymentMethod
+        returnDate: dropoffDate,
+        pickupLocation: pickupLocation,
+        returnLocation: returnLocation
       };
 
-      // Save booking to localStorage
-      const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      existingBookings.push(booking);
-      localStorage.setItem('bookings', JSON.stringify(existingBookings));
+      const bookingResponse = await createBooking(bookingData);
+      const bookingId = bookingResponse.data.id;
 
-      setLoading(false);
+      // Step 2: Create payment
+      const paymentData = {
+        bookingId: bookingId,
+        paymentMethod: 'upi',
+        transactionId: `UPI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      };
+
+      await createPayment(paymentData);
+
+      // Success
       alert('Payment successful! Your booking has been confirmed.');
       navigate('/bookings');
-    }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to process payment. Please try again.');
+      console.error('Error processing payment:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -141,18 +161,20 @@ export default function PaymentPage() {
           {/* Car Summary with Image */}
           <div className="card mb-4 shadow-lg">
             <div className="card-header bg-dark text-white">
-              <h5 className="mb-0">🚗 Booking Summary</h5>
+              <h5 className="mb-0"><FaCar className="me-2" /> Booking Summary</h5>
             </div>
             <div className="card-body">
               {/* Large Car Image */}
               <div className="mb-3">
                 <img
-                  src={car.img || 'https://via.placeholder.com/500x300?text=Car+Image'}
-                  alt={`${car.brand} ${car.model}`}
+                  src={car.img || getImagePath(car.imageUrl, car.make || car.brand, car.model) || '/vehicle-images/Accord.jpg'}
+                  alt={`${car.brand || car.make || 'Car'} ${car.model || ''}`}
                   className="img-fluid rounded shadow-sm"
                   style={{ height: '250px', objectFit: 'cover', width: '100%' }}
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/500x300?text=Car+Image';
+                    // Try fallback based on make/model
+                    const fallback = getImagePath(null, car.make || car.brand, car.model);
+                    e.target.src = fallback;
                   }}
                 />
               </div>
@@ -160,12 +182,12 @@ export default function PaymentPage() {
               {/* Car Details */}
               <div className="row g-3">
                 <div className="col-md-8">
-                  <h4 className="mb-2">{car.brand} {car.model}</h4>
+                  <h4 className="mb-2">{car.brand || car.make || 'Car'} {car.model || ''}</h4>
                   <p className="text-muted mb-2">
-                    {car.type} • {car.seats} seats • {car.fuel}
+                    {car.type || `${car.fuelType || car.fuel || ''} ${car.transmission || ''}`} • {car.seats || car.seatingCapacity || 0} seats • {car.fuel || car.fuelType || ''}
                   </p>
                   <p className="mb-0">
-                    <strong className="text-primary fs-5">₹{car.basePricePerDay}</strong> <span className="text-muted">/day</span>
+                    <strong className="text-primary fs-5">₹{pricePerDay}</strong> <span className="text-muted">/day</span>
                   </p>
                 </div>
                 <div className="col-md-4 text-end">
@@ -180,28 +202,52 @@ export default function PaymentPage() {
           {/* Dates Selection */}
           <div className="card mb-4">
             <div className="card-header bg-info text-white">
-              <h5 className="mb-0">Rental Dates</h5>
+              <h5 className="mb-0">Rental Dates & Locations</h5>
             </div>
             <div className="card-body">
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Pick-up Date</label>
+                  <label className="form-label fw-bold">Pick-up Date *</label>
                   <input
                     type="date"
                     className="form-control form-control-lg"
                     value={pickupDate}
                     onChange={(e) => setPickupDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
+                    required
                   />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Drop-off Date</label>
+                  <label className="form-label fw-bold">Drop-off Date *</label>
                   <input
                     type="date"
                     className="form-control form-control-lg"
                     value={dropoffDate}
                     onChange={(e) => setDropoffDate(e.target.value)}
                     min={pickupDate || new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Pick-up Location *</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-lg"
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    placeholder="Enter pickup location"
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Return Location *</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-lg"
+                    value={returnLocation}
+                    onChange={(e) => setReturnLocation(e.target.value)}
+                    placeholder="Enter return location"
+                    required
                   />
                 </div>
               </div>
@@ -213,116 +259,25 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* Payment Method Selection */}
+          {/* UPI Payment */}
           <div className="card mb-4">
             <div className="card-header bg-success text-white">
-              <h5 className="mb-0">Payment Method</h5>
+              <h5 className="mb-0"><FaMobileAlt className="me-2" /> UPI Payment</h5>
             </div>
             <div className="card-body">
-              <div className="form-check mb-3">
+              <div className="mb-3">
+                <label className="form-label fw-bold">UPI ID</label>
                 <input
-                  className="form-check-input"
-                  type="radio"
-                  name="paymentMethod"
-                  id="card"
-                  value="card"
-                  checked={paymentMethod === 'card'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  type="text"
+                  className="form-control form-control-lg"
+                  placeholder="yourname@paytm or yourname@ybl"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
                 />
-                <label className="form-check-label" htmlFor="card">
-                  💳 Credit/Debit Card
-                </label>
-              </div>
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="paymentMethod"
-                  id="upi"
-                  value="upi"
-                  checked={paymentMethod === 'upi'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <label className="form-check-label" htmlFor="upi">
-                  📱 UPI
-                </label>
-              </div>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="paymentMethod"
-                  id="wallet"
-                  value="wallet"
-                  checked={paymentMethod === 'wallet'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <label className="form-check-label" htmlFor="wallet">
-                  💰 Digital Wallet
-                </label>
+                <small className="text-muted">Enter your UPI ID (e.g., yourname@paytm, yourname@ybl, yourname@phonepe)</small>
               </div>
             </div>
           </div>
-
-          {/* Card Details */}
-          {paymentMethod === 'card' && (
-            <div className="card mb-4">
-              <div className="card-header bg-light">
-                <h5 className="mb-0">Card Details</h5>
-              </div>
-              <div className="card-body">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Card Number</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    placeholder="1234 5678 9012 3456"
-                    name="cardNumber"
-                    value={cardDetails.cardNumber}
-                    onChange={handleCardInputChange}
-                    maxLength="19"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Cardholder Name</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
-                    placeholder="John Doe"
-                    name="cardHolder"
-                    value={cardDetails.cardHolder}
-                    onChange={handleCardInputChange}
-                  />
-                </div>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Expiry Date</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-lg"
-                      placeholder="MM/YY"
-                      name="expiryDate"
-                      value={cardDetails.expiryDate}
-                      onChange={handleCardInputChange}
-                      maxLength="5"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">CVV</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-lg"
-                      placeholder="123"
-                      name="cvv"
-                      value={cardDetails.cvv}
-                      onChange={handleCardInputChange}
-                      maxLength="3"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Error Message */}
           {error && (
@@ -338,11 +293,11 @@ export default function PaymentPage() {
             </div>
             <div className="card-body">
               <div className="d-flex justify-content-between mb-2">
-                <span>Car: {car.brand} {car.model}</span>
+                <span>Car: {car.brand || car.make} {car.model}</span>
               </div>
               <div className="d-flex justify-content-between mb-2">
                 <span>Daily Rate:</span>
-                <strong>₹{car.basePricePerDay}</strong>
+                <strong>₹{car.basePricePerDay || car.pricePerDay || 0}</strong>
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <span>Duration:</span>
@@ -351,7 +306,7 @@ export default function PaymentPage() {
               <hr />
               <div className="d-flex justify-content-between mb-3">
                 <span>Subtotal:</span>
-                <strong>₹{(car.basePricePerDay * days).toLocaleString()}</strong>
+                <strong>₹{(pricePerDay * days).toLocaleString()}</strong>
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <span>Insurance:</span>
@@ -386,13 +341,12 @@ export default function PaymentPage() {
                 onClick={handlePayment}
                 disabled={loading || days <= 0}
               >
-                {loading ? '⏳ Processing...' : `💳 Pay ₹${Math.round(totalCost * 1.1).toLocaleString()}`}
+                {loading ? <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...</> : <><FaMobileAlt className="me-2" /> Pay via UPI ₹{Math.round(totalCost * 1.1).toLocaleString()}</>}
               </button>
 
               {/* Info */}
               <div className="alert alert-info mt-3 mb-0 small">
-                <strong>Test Card Number:</strong> 4532 1488 0343 6467<br />
-                <strong>Any Expiry & CVV:</strong> Valid dates and 3-digit CVV
+                <strong>Note:</strong> Payment will be processed via UPI. Make sure your UPI ID is correct.
               </div>
             </div>
           </div>

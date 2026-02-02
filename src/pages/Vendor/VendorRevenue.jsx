@@ -1,22 +1,71 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
+import { getVendorBookings } from '../../services/api'
+import { FaMoneyBillWave, FaChartBar, FaChartLine, FaStar } from 'react-icons/fa'
 export default function VendorRevenue() {
-  const [revenueData] = useState([
-    { month: 'July', revenue: 28500, bookings: 12, avgRating: 4.5 },
-    { month: 'August', revenue: 35200, bookings: 15, avgRating: 4.6 },
-    { month: 'September', revenue: 42000, bookings: 18, avgRating: 4.7 },
-    { month: 'October', revenue: 38500, bookings: 16, avgRating: 4.8 },
-    { month: 'November', revenue: 45000, bookings: 20, avgRating: 4.9 },
-    { month: 'December', revenue: 35000, bookings: 8, avgRating: 4.8 }
-  ])
+  const [revenueData, setRevenueData] = useState([])
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const currentMonth = new Date().toLocaleString('default', { month: 'long' })
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth)
 
-  const [selectedMonth, setSelectedMonth] = useState('December')
+  useEffect(() => {
+    fetchRevenueData()
+  }, [])
+
+  const fetchRevenueData = async () => {
+    try {
+      setLoading(true)
+      const response = await getVendorBookings()
+      const bookingsList = response.data || []
+      setBookings(bookingsList)
+
+      // Process monthly data found in bookings
+      // Create a map for all months
+      const monthMap = {}
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      months.forEach(m => monthMap[m] = { month: m, revenue: 0, bookings: 0, totalRating: 0, ratingCount: 0 })
+
+      bookingsList.forEach(booking => {
+        if (!booking.pickupDate) return
+        const date = new Date(booking.pickupDate)
+        const monthName = date.toLocaleString('default', { month: 'long' })
+
+        if (monthMap[monthName]) {
+          monthMap[monthName].revenue += (booking.totalAmount || 0)
+          monthMap[monthName].bookings += 1
+          if (booking.rating) {
+            monthMap[monthName].totalRating += booking.rating
+            monthMap[monthName].ratingCount += 1
+          }
+        }
+      })
+
+      // Convert back to array
+      const processedData = Object.values(monthMap).map(m => ({
+        ...m,
+        avgRating: m.ratingCount > 0 ? (m.totalRating / m.ratingCount).toFixed(1) : 0
+      }))
+
+      // Filter to show only recent months or all? Let's show all for now or current window
+      // For this demo, let's just use the processed data, maybe slice last 6 months if needed
+      // But since data might be sparse, let's keep all non-zero or just the full list?
+      // existing UI expects 6 months. Let's just pass the full list or relevant months.
+      const relevantData = processedData.filter(d => d.bookings > 0 || months.includes(d.month)) // simplified
+      setRevenueData(processedData)
+
+    } catch (err) {
+      console.error('Error fetching revenue data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const totalRevenue = revenueData.reduce((sum, m) => sum + m.revenue, 0)
   const totalBookings = revenueData.reduce((sum, m) => sum + m.bookings, 0)
-  const avgRevenue = (totalRevenue / revenueData.length).toFixed(0)
+  const avgRevenue = revenueData.length > 0 ? (totalRevenue / 12).toFixed(0) : 0 // Monthly avg over year
 
-  const selectedMonthData = revenueData.find(m => m.month === selectedMonth)
+  const selectedMonthData = revenueData.find(m => m.month === selectedMonth) || { month: selectedMonth, revenue: 0, bookings: 0, avgRating: 0 }
 
   return (
     <div>
@@ -26,7 +75,7 @@ export default function VendorRevenue() {
       <div className="row g-4 mb-4">
         <div className="col-md-6 col-lg-3">
           <div className="vendor-stat-card">
-            <div className="stat-icon primary">💰</div>
+            <div className="stat-icon primary"><FaMoneyBillWave /></div>
             <div className="stat-content">
               <h6 className="stat-label">Total Revenue</h6>
               <h3 className="stat-value">₹{(totalRevenue / 100000).toFixed(2)}L</h3>
@@ -37,7 +86,7 @@ export default function VendorRevenue() {
 
         <div className="col-md-6 col-lg-3">
           <div className="vendor-stat-card">
-            <div className="stat-icon info">📊</div>
+            <div className="stat-icon info"><FaChartBar /></div>
             <div className="stat-content">
               <h6 className="stat-label">Avg Monthly</h6>
               <h3 className="stat-value">₹{(avgRevenue / 1000).toFixed(0)}K</h3>
@@ -48,7 +97,7 @@ export default function VendorRevenue() {
 
         <div className="col-md-6 col-lg-3">
           <div className="vendor-stat-card">
-            <div className="stat-icon success">📈</div>
+            <div className="stat-icon success"><FaChartLine /></div>
             <div className="stat-content">
               <h6 className="stat-label">Total Bookings</h6>
               <h3 className="stat-value">{totalBookings}</h3>
@@ -59,7 +108,7 @@ export default function VendorRevenue() {
 
         <div className="col-md-6 col-lg-3">
           <div className="vendor-stat-card">
-            <div className="stat-icon accent">⭐</div>
+            <div className="stat-icon accent"><FaStar /></div>
             <div className="stat-content">
               <h6 className="stat-label">Avg Rating</h6>
               <h3 className="stat-value">4.7/5</h3>
@@ -79,9 +128,9 @@ export default function VendorRevenue() {
             <div className="chart-bars">
               {revenueData.map((data, idx) => (
                 <div key={idx} className="chart-bar-wrapper">
-                  <div 
+                  <div
                     className="chart-bar"
-                    style={{ 
+                    style={{
                       height: `${(data.revenue / 45000) * 250}px`,
                       opacity: selectedMonth === data.month ? 1 : 0.6
                     }}
@@ -120,7 +169,7 @@ export default function VendorRevenue() {
                 </div>
                 <div className="detail-row-large">
                   <span>Average Rating</span>
-                  <strong>⭐ {selectedMonthData.avgRating}/5</strong>
+                  <strong><FaStar className="text-warning me-1" /> {selectedMonthData.avgRating}/5</strong>
                 </div>
               </div>
             </div>
@@ -195,27 +244,21 @@ export default function VendorRevenue() {
               </tr>
             </thead>
             <tbody>
-              {[
-                { tid: 'TXN001', bid: 'BK006', cust: 'Sneha Desai', car: 'Honda Accord', amt: 6500, date: '2025-12-09', status: 'Pending' },
-                { tid: 'TXN002', bid: 'BK005', cust: 'Vikas Reddy', car: 'Maruti Swift', amt: 2500, date: '2025-12-05', status: 'Refunded' },
-                { tid: 'TXN003', bid: 'BK004', cust: 'Neha Sharma', car: 'Tata Nexon', amt: 4500, date: '2025-12-09', status: 'Completed' },
-                { tid: 'TXN004', bid: 'BK003', cust: 'Amit Patel', car: 'Mahindra XUV500', amt: 7500, date: '2025-12-08', status: 'Completed' },
-                { tid: 'TXN005', bid: 'BK002', cust: 'Priya Singh', car: 'Honda Accord', amt: 5000, date: '2025-12-09', status: 'Pending' },
-                { tid: 'TXN006', bid: 'BK001', cust: 'Rajesh Kumar', car: 'Maruti Swift', amt: 3500, date: '2025-12-10', status: 'Completed' }
-              ].map(txn => (
-                <tr key={txn.tid}>
-                  <td><strong>{txn.tid}</strong></td>
-                  <td>{txn.bid}</td>
-                  <td>{txn.cust}</td>
-                  <td>{txn.car}</td>
-                  <td><strong>₹{txn.amt.toLocaleString()}</strong></td>
-                  <td>{txn.date}</td>
+              {bookings.slice(0, 10).map(txn => (
+                <tr key={txn.id}>
+                  <td><strong>#{txn.id}</strong></td>
+                  <td>#{txn.id}</td>
+                  <td>{txn.userName || 'Unknown'}</td>
+                  <td>{txn.vehicleMake} {txn.vehicleModel}</td>
+                  <td><strong>₹{txn.totalAmount?.toLocaleString()}</strong></td>
+                  <td>{new Date(txn.bookingDate || txn.pickupDate || Date.now()).toLocaleDateString()}</td>
                   <td>
-                    <span className={`badge ${
-                      txn.status === 'Completed' ? 'bg-success' : 
-                      txn.status === 'Pending' ? 'bg-warning text-dark' : 
-                      'bg-danger'
-                    }`}>
+                    <span className={`badge ${txn.status === 'COMPLETED' ? 'bg-success' :
+                      txn.status === 'PENDING' ? 'bg-warning text-dark' :
+                        txn.status === 'ACTIVE' ? 'bg-primary' :
+                          txn.status === 'CONFIRMED' ? 'bg-info' :
+                            'bg-danger'
+                      }`}>
                       {txn.status}
                     </span>
                   </td>
@@ -226,42 +269,6 @@ export default function VendorRevenue() {
         </div>
       </div>
 
-      {/* Payout Information */}
-      <div className="vendor-card">
-        <div className="card-header">
-          <h5 className="mb-0">Payout Information</h5>
-        </div>
-        <div className="card-body">
-          <div className="row g-4">
-            <div className="col-md-6">
-              <div className="payout-section">
-                <h6>Current Balance</h6>
-                <div className="balance-amount">₹{totalRevenue.toLocaleString()}</div>
-                <p className="text-muted small">Available for withdrawal</p>
-                <button className="btn btn-primary mt-2">Request Payout</button>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="payout-section">
-                <h6>Bank Details</h6>
-                <div className="detail-row">
-                  <span className="label">Account Holder:</span>
-                  <span>Vendor Name</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Account Number:</span>
-                  <span>****1234</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">IFSC Code:</span>
-                  <span>SBIN0001234</span>
-                </div>
-                <button className="btn btn-outline-primary mt-2">Update Bank Details</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

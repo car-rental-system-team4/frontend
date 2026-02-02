@@ -1,33 +1,94 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAllUsers, deleteUser } from '../../services/api';
+import { FaUsers, FaUser } from 'react-icons/fa';
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Rajesh Kumar', email: 'rajesh@example.com', role: 'Customer', status: 'Active', joinedDate: '2025-01-15' },
-    { id: 2, name: 'Priya Singh', email: 'priya@example.com', role: 'Vendor', status: 'Active', joinedDate: '2025-02-20' },
-    { id: 3, name: 'Admin User', email: 'admin@rentyourcar.com', role: 'Admin', status: 'Active', joinedDate: '2024-12-01' },
-    { id: 4, name: 'Spam User', email: 'spam@example.com', role: 'Customer', status: 'Blocked', joinedDate: '2025-03-10' },
-    { id: 5, name: 'Amit Patel', email: 'amit@example.com', role: 'Customer', status: 'Active', joinedDate: '2025-04-05' },
-  ]);
-
+  const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const toggleStatus = (id) => {
-    setUsers(users.map(user => {
-      if (user.id === id) {
-        return { ...user, status: user.status === 'Active' ? 'Blocked' : 'Active' };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllUsers();
+      setUsers(response.data || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      if (err.response?.status === 403) {
+        alert('Access denied. Please make sure you are logged in as an admin.');
+      } else if (err.response?.status === 401) {
+        alert('Your session has expired. Please log in again.');
+        navigate('/login');
       }
-      return user;
-    }));
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await deleteUser(userId);
+      alert('User deleted successfully!');
+      fetchUsers(); // Refresh the list
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      console.error('Error response:', err.response);
+
+      // Extract error message from response
+      let errorMessage = 'Unknown error occurred';
+
+      if (err.response) {
+        // Backend returns error message as string in response.data
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        }
+        // Handle JSON object response
+        else if (err.response.data && typeof err.response.data === 'object') {
+          errorMessage = err.response.data.message || err.response.data.error || JSON.stringify(err.response.data);
+        }
+        // Fallback to status text
+        else if (err.response.statusText) {
+          errorMessage = err.response.statusText;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      alert('Failed to delete user:\n' + errorMessage);
+    }
+  };
+
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedUser(null);
+  };
 
   return (
     <div>
-      <h1 className="fw-bold mb-4">👥 Manage Users</h1>
+      <h1 className="fw-bold mb-4"><FaUsers className="me-2 text-primary" /> Manage Users</h1>
 
       {/* Search Bar */}
       <div className="card shadow-sm border-0 mb-4">
@@ -46,71 +107,180 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="card shadow-sm border-0">
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>User ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Joined Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map(user => (
-                  <tr key={user.id}>
-                    <td>#{user.id}</td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded-circle p-2 me-2">
-                          👤
-                        </div>
-                        <strong>{user.name}</strong>
-                      </div>
-                    </td>
-                    <td>{user.email}</td>
-                    <td>
-                      <span className={`badge ${user.role === 'Admin' ? 'bg-danger' :
-                        user.role === 'Vendor' ? 'bg-info' : 'bg-primary'
-                        }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td>{user.joinedDate}</td>
-                    <td>
-                      <span className={`badge ${user.status === 'Active' ? 'bg-success' : 'bg-secondary'}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-secondary me-2">View</button>
-                      {user.role !== 'Admin' && (
-                        <button
-                          className={`btn btn-sm ${user.status === 'Active' ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                          onClick={() => toggleStatus(user.id)}
-                        >
-                          {user.status === 'Active' ? 'Block' : 'Unblock'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-5">
-              <p className="text-muted">No users found matching your search.</p>
-            </div>
-          )}
+          <p className="mt-3">Loading users...</p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Users Table */}
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover mb-0 align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>User ID</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-5">
+                          <p className="text-muted">No users found matching your search.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map(user => (
+                        <tr key={user.id}>
+                          <td>#{user.id}</td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="bg-light rounded-circle p-2 me-2">
+                                <FaUser className="text-secondary" />
+                              </div>
+                              <strong>{user.name || 'Unknown'}</strong>
+                            </div>
+                          </td>
+                          <td>{user.email || 'N/A'}</td>
+                          <td>{user.phoneNo || 'N/A'}</td>
+                          <td>
+                            <span className={`badge ${user.role?.toUpperCase() === 'ADMIN' ? 'bg-danger' :
+                                user.role?.toUpperCase() === 'VENDOR' ? 'bg-info' : 'bg-primary'
+                              }`}>
+                              {user.role || 'CUSTOMER'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => handleViewUser(user)}
+                              >
+                                View
+                              </button>
+                              {user.role?.toUpperCase() !== 'ADMIN' && (
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* User Details Modal */}
+      {showModal && selectedUser && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">User Details - {selectedUser.name || 'Unknown'}</h5>
+                <button type="button" className="btn-close" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Personal Information</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>User ID:</th>
+                          <td><strong>#{selectedUser.id}</strong></td>
+                        </tr>
+                        <tr>
+                          <th>Name:</th>
+                          <td>{selectedUser.name || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Email:</th>
+                          <td>{selectedUser.email || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Phone:</th>
+                          <td>{selectedUser.phoneNo || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Gender:</th>
+                          <td>{selectedUser.gender || 'N/A'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Account Information</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>Role:</th>
+                          <td>
+                            <span className={`badge ${selectedUser.role?.toUpperCase() === 'ADMIN' ? 'bg-danger' :
+                                selectedUser.role?.toUpperCase() === 'VENDOR' ? 'bg-info' : 'bg-primary'
+                              }`}>
+                              {selectedUser.role || 'CUSTOMER'}
+                            </span>
+                          </td>
+                        </tr>
+                        {selectedUser.licenseNo && (
+                          <tr>
+                            <th>License Number:</th>
+                            <td>{selectedUser.licenseNo}</td>
+                          </tr>
+                        )}
+                        {selectedUser.aadharNo && (
+                          <tr>
+                            <th>Aadhar Number:</th>
+                            <td>{selectedUser.aadharNo}</td>
+                          </tr>
+                        )}
+                        {(selectedUser.houseNo || selectedUser.buildingName || selectedUser.streetName || selectedUser.area) && (
+                          <tr>
+                            <th>Address:</th>
+                            <td>
+                              {[selectedUser.houseNo, selectedUser.buildingName, selectedUser.streetName, selectedUser.area]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </td>
+                          </tr>
+                        )}
+                        {selectedUser.pincode && (
+                          <tr>
+                            <th>Pincode:</th>
+                            <td>{selectedUser.pincode}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

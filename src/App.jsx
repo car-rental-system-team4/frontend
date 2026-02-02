@@ -14,12 +14,17 @@ import RegisterPage from './pages/Auth/RegisterPage'
 import UserProfilePage from './pages/Profile/UserProfilePage'
 import BookingsPage from './pages/Bookings/BookingsPage'
 import PaymentPage from './pages/Payment/PaymentPage'
+import ReviewsPage from './pages/Reviews/ReviewsPage'
+import ComplaintsPage from './pages/Complaints/ComplaintsPage'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import AdminCarsPage from './pages/Admin/AdminCarsPage'
 import AdminBookingsPage from './pages/Admin/AdminBookingsPage'
 import AdminUsersPage from './pages/Admin/AdminUsersPage'
 import AdminReportsPage from './pages/Admin/AdminReportsPage'
 import AdminSettingsPage from './pages/Admin/AdminSettingsPage'
+import AdminReviewsPage from './pages/Admin/AdminReviewsPage'
+import AdminComplaintsPage from './pages/Admin/AdminComplaintsPage'
+import UserRegistrationRequestsPage from './pages/Admin/UserRegistrationRequestsPage'
 import VendorDashboard from './pages/Vendor/VendorDashboard'
 import VendorBookings from './pages/Vendor/VendorBookings'
 import VendorCars from './pages/Vendor/VendorCars'
@@ -38,7 +43,9 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/bookings" element={<BookingsPage />} />
+        <Route path="/bookings" element={<BookingsPage />} />
         <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/complaints" element={<ComplaintsPage />} />
       </Route>
 
       {/* Routes without Header and Footer (Auth pages) */}
@@ -53,6 +60,9 @@ function App() {
         <Route path="/admin/cars" element={<AdminCarsPage />} />
         <Route path="/admin/bookings" element={<AdminBookingsPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/users/registration-requests" element={<UserRegistrationRequestsPage />} />
+        <Route path="/admin/reviews" element={<AdminReviewsPage />} />
+        <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
         <Route path="/admin/reports" element={<AdminReportsPage />} />
         <Route path="/admin/settings" element={<AdminSettingsPage />} />
       </Route>
@@ -63,6 +73,7 @@ function App() {
         <Route path="/vendor/cars" element={<VendorCars />} />
         <Route path="/vendor/bookings" element={<VendorBookings />} />
         <Route path="/vendor/revenue" element={<VendorRevenue />} />
+        <Route path="/vendor/complaints" element={<ComplaintsPage />} />
         <Route path="/vendor/settings" element={<VendorSettings />} />
       </Route>
     </Routes>

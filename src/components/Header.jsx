@@ -56,20 +56,31 @@ export default function Header() {
               <div className="d-none d-md-flex align-items-center gap-2">
                 {user ? (
                   <>
-                    <Link 
-                      to="/profile" 
+                    <Link
+                      to="/profile"
                       className="nav-link text-dark mb-0 text-decoration-none"
                       style={{ cursor: 'pointer', fontWeight: '500' }}
                     >
-                      👤 {user.fullName || user.email}
+                      👤 {user.name || user.fullName || user.email}
                     </Link>
-                    <Link 
-                      to="/bookings" 
-                      className="btn btn-sm btn-outline-primary"
+
+                    {/* Dashboard Link for Vendor/Admin */}
+                    {(user.role === 'VENDOR' || user.role === 'ADMIN') && (
+                      <Link
+                        to={user.role === 'VENDOR' ? '/vendor/dashboard' : '/admin/dashboard'}
+                        className="btn btn-sm btn-primary"
+                      >
+                        📊 Dashboard
+                      </Link>
+                    )}
+
+                    <Link
+                      to="/bookings"
+                      className="btn btn-sm btn-primary"
                     >
                       📋 My Bookings
                     </Link>
-                    <button className="btn btn-sm btn-outline-dark" onClick={handleLogout}>
+                    <button className="btn btn-sm btn-primary" onClick={handleLogout}>
                       Logout
                     </button>
                   </>
@@ -113,21 +124,32 @@ export default function Header() {
 
           {user ? (
             <>
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 className="nav-link text-decoration-none"
                 onClick={() => setIsOpen(false)}
               >
-                👤 {user.fullName || user.email}
+                👤 {user.name || user.fullName || user.email}
               </Link>
-              <Link 
-                to="/bookings" 
+
+              {(user.role === 'VENDOR' || user.role === 'ADMIN') && (
+                <Link
+                  to={user.role === 'VENDOR' ? '/vendor/dashboard' : '/admin/dashboard'}
+                  className="nav-link text-primary fw-bold"
+                  onClick={() => setIsOpen(false)}
+                >
+                  📊 Dashboard
+                </Link>
+              )}
+
+              <Link
+                to="/bookings"
                 className="nav-link text-decoration-none"
                 onClick={() => setIsOpen(false)}
               >
                 📋 My Bookings
               </Link>
-              <button className="btn btn-sm btn-outline-dark w-100" onClick={() => { handleLogout(); setIsOpen(false); }}>
+              <button className="btn btn-sm btn-primary w-100" onClick={() => { handleLogout(); setIsOpen(false); }}>
                 Logout
               </button>
             </>

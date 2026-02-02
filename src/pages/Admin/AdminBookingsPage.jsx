@@ -1,22 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAllBookings } from '../../services/api';
+import { FaClipboardList } from 'react-icons/fa';
 
 export default function AdminBookingsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All');
-  const [bookings, setBookings] = useState([
-    { id: 'BK001', customer: 'Rajesh Kumar', car: 'Maruti Swift', startDate: '2025-12-10', endDate: '2025-12-15', amount: 7500, status: 'Completed' },
-    { id: 'BK002', customer: 'Priya Singh', car: 'Honda City', startDate: '2025-12-12', endDate: '2025-12-14', amount: 5000, status: 'Pending' },
-    { id: 'BK003', customer: 'Amit Patel', car: 'Mahindra XUV700', startDate: '2025-12-20', endDate: '2025-12-25', amount: 20000, status: 'Confirmed' },
-    { id: 'BK004', customer: 'Neha Sharma', car: 'Tata Nexon', startDate: '2025-12-18', endDate: '2025-12-20', amount: 4000, status: 'Cancelled' },
-    { id: 'BK005', customer: 'Vikram Malhotra', car: 'Maruti Swift', startDate: '2025-12-22', endDate: '2025-12-24', amount: 3000, status: 'Pending' },
-  ]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const handleAction = (id, action) => {
-    setBookings(bookings.map(booking => {
-      if (booking.id === id) {
-        return { ...booking, status: action === 'approve' ? 'Confirmed' : 'Cancelled' };
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllBookings();
+      setBookings(response.data || []);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+      if (err.response?.status === 403) {
+        alert('Access denied. Please make sure you are logged in as an admin.');
+      } else if (err.response?.status === 401) {
+        alert('Your session has expired. Please log in again.');
+        navigate('/login');
       }
-      return booking;
-    }));
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredBookings = activeTab === 'All'
@@ -25,94 +40,265 @@ export default function AdminBookingsPage() {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'Completed': return <span className="badge bg-success">Completed</span>;
-      case 'Pending': return <span className="badge bg-warning text-dark">Pending</span>;
-      case 'Confirmed': return <span className="badge bg-info">Confirmed</span>;
-      case 'Cancelled': return <span className="badge bg-danger">Cancelled</span>;
+      case 'COMPLETED': return <span className="badge bg-success">Completed</span>;
+      case 'PENDING': return <span className="badge bg-warning text-dark">Pending</span>;
+      case 'CONFIRMED': return <span className="badge bg-info">Confirmed</span>;
+      case 'ACTIVE': return <span className="badge bg-primary">Active</span>;
+      case 'CANCELLED': return <span className="badge bg-danger">Cancelled</span>;
       default: return <span className="badge bg-secondary">{status}</span>;
     }
   };
 
+  const calculateDays = (pickupDate, returnDate) => {
+    const pickup = new Date(pickupDate);
+    const return_ = new Date(returnDate);
+    const diffTime = Math.abs(return_ - pickup);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays || 1;
+  };
+
+  const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedBooking(null);
+  };
+
   return (
     <div>
-      <h1 className="fw-bold mb-4">📋 Manage Bookings</h1>
+      <h1 className="fw-bold mb-4"><FaClipboardList className="me-2 text-primary" /> Manage Bookings</h1>
 
       {/* Status Tabs */}
       <ul className="nav nav-tabs mb-4">
-        {['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'].map(tab => (
+        {['All', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'ACTIVE'].map(tab => (
           <li className="nav-item" key={tab}>
             <button
               className={`nav-link ${activeTab === tab ? 'active fw-bold' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab}
+              {tab === 'PENDING' ? 'Pending' :
+                tab === 'CONFIRMED' ? 'Confirmed' :
+                  tab === 'COMPLETED' ? 'Completed' :
+                    tab === 'CANCELLED' ? 'Cancelled' :
+                      tab === 'ACTIVE' ? 'Active' : tab}
+              {tab !== 'All' && (
+                <span className="badge bg-secondary ms-2">
+                  {bookings.filter(b => b.status === tab).length}
+                </span>
+              )}
             </button>
           </li>
         ))}
       </ul>
 
-      {/* Bookings Table */}
-      <div className="card shadow-sm border-0">
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>Booking ID</th>
-                  <th>Customer</th>
-                  <th>Car Details</th>
-                  <th>Dates</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map(booking => (
-                  <tr key={booking.id}>
-                    <td><strong>{booking.id}</strong></td>
-                    <td>{booking.customer}</td>
-                    <td>{booking.car}</td>
-                    <td>
-                      <small className="d-block text-muted">From: {booking.startDate}</small>
-                      <small className="d-block text-muted">To: {booking.endDate}</small>
-                    </td>
-                    <td><strong>₹{booking.amount}</strong></td>
-                    <td>{getStatusBadge(booking.status)}</td>
-                    <td>
-                      {booking.status === 'Pending' ? (
-                        <div className="d-flex gap-2">
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => handleAction(booking.id, 'approve')}
-                            title="Approve"
-                          >
-                            ✓
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleAction(booking.id, 'reject')}
-                            title="Reject"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <button className="btn btn-sm btn-outline-secondary">View Details</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
-          {filteredBookings.length === 0 && (
-            <div className="text-center py-5">
-              <p className="text-muted mb-0">No bookings found in this category.</p>
-            </div>
-          )}
+          <p className="mt-3">Loading bookings...</p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Bookings Table */}
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover mb-0 align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Booking ID</th>
+                      <th>Customer</th>
+                      <th>Car Details</th>
+                      <th>Dates</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="text-center py-5">
+                          <p className="text-muted mb-0">No bookings found in this category.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredBookings.map(booking => {
+                        const days = calculateDays(booking.pickupDate, booking.returnDate);
+                        return (
+                          <tr key={booking.id}>
+                            <td><strong>#{booking.id}</strong></td>
+                            <td>
+                              <div>
+                                <strong>{booking.userName || 'Unknown'}</strong>
+                                <br />
+                                <small className="text-muted">{booking.userEmail || ''}</small>
+                              </div>
+                            </td>
+                            <td>
+                              <div>
+                                <strong>{booking.vehicleMake} {booking.vehicleModel}</strong>
+                                <br />
+                                <small className="text-muted">{booking.vehicleYear} • {booking.vehicleLicensePlate}</small>
+                              </div>
+                            </td>
+                            <td>
+                              <small className="d-block text-muted">From: {new Date(booking.pickupDate).toLocaleDateString()}</small>
+                              <small className="d-block text-muted">To: {new Date(booking.returnDate).toLocaleDateString()}</small>
+                              <small className="text-muted">({days} day{days !== 1 ? 's' : ''})</small>
+                            </td>
+                            <td><strong>₹{booking.totalAmount?.toLocaleString() || '0'}</strong></td>
+                            <td>{getStatusBadge(booking.status)}</td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => handleViewDetails(booking)}
+                              >
+                                View Details
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Booking Details Modal */}
+      {showModal && selectedBooking && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Booking Details - #{selectedBooking.id}</h5>
+                <button type="button" className="btn-close" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Customer Information</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>Name:</th>
+                          <td>{selectedBooking.userName || 'Unknown'}</td>
+                        </tr>
+                        <tr>
+                          <th>Email:</th>
+                          <td>{selectedBooking.userEmail || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>User ID:</th>
+                          <td>#{selectedBooking.userId}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Vehicle Information</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>Vehicle:</th>
+                          <td>{selectedBooking.vehicleMake} {selectedBooking.vehicleModel}</td>
+                        </tr>
+                        <tr>
+                          <th>Year:</th>
+                          <td>{selectedBooking.vehicleYear}</td>
+                        </tr>
+                        <tr>
+                          <th>License Plate:</th>
+                          <td>{selectedBooking.vehicleLicensePlate || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Price Per Day:</th>
+                          <td>₹{selectedBooking.vehiclePricePerDay || '0'}</td>
+                        </tr>
+                        <tr>
+                          <th>Vendor:</th>
+                          <td>{selectedBooking.vendorName || 'Unknown'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <hr />
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Booking Information</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>Booking ID:</th>
+                          <td><strong>#{selectedBooking.id}</strong></td>
+                        </tr>
+                        <tr>
+                          <th>Pickup Date:</th>
+                          <td>{new Date(selectedBooking.pickupDate).toLocaleDateString()}</td>
+                        </tr>
+                        <tr>
+                          <th>Return Date:</th>
+                          <td>{new Date(selectedBooking.returnDate).toLocaleDateString()}</td>
+                        </tr>
+                        <tr>
+                          <th>Duration:</th>
+                          <td>{calculateDays(selectedBooking.pickupDate, selectedBooking.returnDate)} day{calculateDays(selectedBooking.pickupDate, selectedBooking.returnDate) !== 1 ? 's' : ''}</td>
+                        </tr>
+                        <tr>
+                          <th>Pickup Location:</th>
+                          <td>{selectedBooking.pickupLocation || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Return Location:</th>
+                          <td>{selectedBooking.returnLocation || 'N/A'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <h6 className="text-muted mb-3">Payment & Status</h6>
+                    <table className="table table-borderless">
+                      <tbody>
+                        <tr>
+                          <th>Total Amount:</th>
+                          <td className="text-primary fw-bold">₹{selectedBooking.totalAmount?.toLocaleString() || '0'}</td>
+                        </tr>
+                        <tr>
+                          <th>Status:</th>
+                          <td>{getStatusBadge(selectedBooking.status)}</td>
+                        </tr>
+                        <tr>
+                          <th>Created At:</th>
+                          <td>{new Date(selectedBooking.createdAt).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                          <th>Last Updated:</th>
+                          <td>{new Date(selectedBooking.updatedAt).toLocaleString()}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

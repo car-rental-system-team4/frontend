@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { signup } from '../../services/api' // Import from api.js
 
 export default function RegisterPage() {
-  const [userType, setUserType] = useState('CUSTOMER') 
+  const [userType, setUserType] = useState('CUSTOMER')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -15,7 +15,7 @@ export default function RegisterPage() {
     phoneNo: '',
     password: '',
     confirmPassword: '',
-    
+
     // Identity & Address (From ER Diagram)
     licenseNo: '',
     aadharNo: '',
@@ -65,37 +65,39 @@ export default function RegisterPage() {
           {/* User Type Toggle */}
           <div className="text-center mb-4">
             <div className="btn-group">
-               <button type="button" className={`btn ${userType === 'CUSTOMER' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('CUSTOMER')}>Customer</button>
-               <button type="button" className={`btn ${userType === 'VENDOR' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('VENDOR')}>Vendor</button>
+              <button type="button" className={`btn ${userType === 'CUSTOMER' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('CUSTOMER')}>Customer</button>
+              <button type="button" className={`btn ${userType === 'VENDOR' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setUserType('VENDOR')}>Vendor</button>
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
-               {/* Personal Info */}
-               <div className="col-md-6"><label>Full Name</label><input name="name" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>Email</label><input name="email" type="email" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>Phone</label><input name="phone" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>Gender</label>
-                 <select name="gender" className="form-select" onChange={handleChange}>
-                   <option value="MALE">Male</option><option value="FEMALE">Female</option>
-                 </select>
-               </div>
+              {/* Personal Info */}
+              <div className="col-md-6"><label>Full Name</label><input name="name" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>Email</label><input name="email" type="email" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>Phone</label><input name="phoneNo" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>Gender</label>
+                <select name="gender" className="form-select" onChange={handleChange}>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
 
-               {/* Identity */}
-               <div className="col-md-6"><label>Aadhar No</label><input name="aadharNo" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>License No</label><input name="licenseNo" className="form-control" onChange={handleChange} required /></div>
+              {/* Identity */}
+              <div className="col-md-6"><label>Aadhar No</label><input name="aadharNo" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>License No</label><input name="licenseNo" className="form-control" onChange={handleChange} required /></div>
 
-               {/* Address */}
-               <div className="col-md-4"><label>House No</label><input name="houseNo" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-8"><label>Building Name</label><input name="buildingName" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>Street</label><input name="streetName" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-3"><label>Area</label><input name="area" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-3"><label>Pincode</label><input name="pincode" className="form-control" onChange={handleChange} required /></div>
+              {/* Address */}
+              <div className="col-md-4"><label>House No</label><input name="houseNo" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-8"><label>Building Name</label><input name="buildingName" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>Street</label><input name="streetName" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-3"><label>Area</label><input name="area" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-3"><label>Pincode</label><input name="pincode" className="form-control" onChange={handleChange} required /></div>
 
-               {/* Password */}
-               <div className="col-md-6"><label>Password</label><input name="password" type="password" className="form-control" onChange={handleChange} required /></div>
-               <div className="col-md-6"><label>Confirm Password</label><input name="confirmPassword" type="password" className="form-control" onChange={handleChange} required /></div>
+              {/* Password */}
+              <div className="col-md-6"><label>Password</label><input name="password" type="password" className="form-control" onChange={handleChange} required /></div>
+              <div className="col-md-6"><label>Confirm Password</label><input name="confirmPassword" type="password" className="form-control" onChange={handleChange} required /></div>
             </div>
 
             <button type="submit" className="btn btn-primary w-100 mt-4" disabled={loading}>

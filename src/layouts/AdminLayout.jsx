@@ -12,7 +12,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   //Security Check
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role?.toUpperCase() !== 'ADMIN') {
     navigate('/login');
     return null;
   }
@@ -23,26 +23,29 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="d-flex" min-vh-100>
+    <div className="min-vh-100 bg-light">
       {/* Sidebar */}
       <nav
-        className="bg-light border-end"
+        className="bg-light border-end shadow-sm"
         style={{
           width: sidebarOpen ? '250px' : '0px',
           overflow: 'hidden',
           transition: 'width 0.3s ease',
-          position: 'relative',
-          minHeight: '100vh',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          height: '100vh',
+          zIndex: 1000,
         }}
       >
-        <div style={{ width: '250px', padding: '1rem' }}>
+        <div className="d-flex flex-column h-100" style={{ width: '250px', padding: '1rem' }}>
           <div className="mb-4">
             <h5 className="fw-bold mb-0 text-dark">Admin Panel</h5>
             <small className="text-muted">RentYourCar</small>
           </div>
           <hr />
 
-          <ul className="nav flex-column gap-2">
+          <ul className="nav flex-column gap-2 flex-grow-1 overflow-auto hide-scrollbar">
             <li className="nav-item">
               <Link to="/admin/dashboard" className="nav-link text-dark">
                 Dashboard
@@ -64,6 +67,16 @@ export default function AdminLayout() {
               </Link>
             </li>
             <li className="nav-item">
+              <Link to="/admin/reviews" className="nav-link text-dark">
+                Reviews
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/admin/complaints" className="nav-link text-dark">
+                Complaints
+              </Link>
+            </li>
+            <li className="nav-item">
               <Link to="/admin/reports" className="nav-link text-dark">
                 Reports
               </Link>
@@ -75,8 +88,8 @@ export default function AdminLayout() {
             </li>
           </ul>
 
-          <hr />
-          <div className="position-absolute bottom-0 start-0 p-3" style={{ width: '250px' }}>
+          <hr className="mt-auto" />
+          <div className="p-1">
             <button
               className="btn btn-danger btn-sm w-100"
               onClick={handleLogout}
@@ -88,9 +101,15 @@ export default function AdminLayout() {
       </nav>
 
       {/* Main Content */}
-      <div className="flex-grow-1 d-flex flex-column">
+      <div
+        className="d-flex flex-column min-vh-100"
+        style={{
+          marginLeft: sidebarOpen ? '250px' : '0px',
+          transition: 'margin-left 0.3s ease',
+        }}
+      >
         {/* {Header Bar} */}
-        <header className="bg-light border-bottom p-3 d-flex justify-content-between align-items-center">
+        <header className="bg-white border-bottom p-3 d-flex justify-content-between align-items-center sticky-top">
           {/* {Toggle Sidebar Button} */}
           <button
             className="btn btn-outline-secondary"
@@ -100,13 +119,12 @@ export default function AdminLayout() {
           </button>
           {/* {User Info display} */}
           <div className="d-flex align-items-center gap-3">
-            <span className="text-muted">{user?.fullName || user?.email}</span>
-            <samll className="badge bg-success">Admin</samll>
+            <span className="text-muted">{user?.fullName || user?.name || 'Admin'}</span>
           </div>
         </header>
 
         {/* {Main Content} */}
-        <main className="flex-grow-1 p-4 overflow-auto">
+        <main className="flex-grow-1 p-4">
           <Outlet />
         </main>
       </div>

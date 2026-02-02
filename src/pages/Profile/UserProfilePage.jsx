@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context';
 import { updateProfile, deleteProfile } from '../../services/api';
+import { FaArrowLeft } from 'react-icons/fa';
 
 export default function UserProfilePage() {
   // 1. Get user and logout 
@@ -66,7 +67,7 @@ export default function UserProfilePage() {
     try {
       // Prepare update data - only include fields that have values (partial update)
       const updateData = {};
-      
+
       // Only include fields that are being updated
       if (formData.name && formData.name !== user.name) updateData.name = formData.name;
       if (formData.phoneNo && formData.phoneNo !== user.phoneNo) updateData.phoneNo = formData.phoneNo;
@@ -78,7 +79,7 @@ export default function UserProfilePage() {
       if (formData.area !== user.area) updateData.area = formData.area || null;
       if (formData.pincode !== user.pincode) updateData.pincode = formData.pincode || null;
       if (formData.gender && formData.gender !== user.gender) updateData.gender = formData.gender;
-      
+
       // Handle password update
       if (formData.password && formData.password.trim() !== '') {
         if (!formData.currentPassword || formData.currentPassword.trim() === '') {
@@ -93,22 +94,22 @@ export default function UserProfilePage() {
       const response = await updateProfile(updateData);
       // Backend returns a string message, not user object
       setSuccessMessage(response.data || 'Profile updated successfully!');
-      
+
       // Update local user state with new values
       const updatedUser = { ...user, ...updateData };
       // Remove password fields from user object
       delete updatedUser.password;
       delete updatedUser.currentPassword;
       updateUser(updatedUser);
-      
+
       // Clear password fields
       setFormData(prev => ({ ...prev, password: '', currentPassword: '' }));
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile", error);
       // Backend returns error message as string in response.data
-      const errorMsg = typeof error.response?.data === 'string' 
-        ? error.response.data 
+      const errorMsg = typeof error.response?.data === 'string'
+        ? error.response.data
         : error.response?.data?.message || 'Failed to update profile. Please try again.';
       setErrorMessage(errorMsg);
     } finally {
@@ -127,8 +128,8 @@ export default function UserProfilePage() {
         navigate('/login');
       } catch (error) {
         console.error("Failed to delete profile", error);
-        const errorMsg = typeof error.response?.data === 'string' 
-          ? error.response.data 
+        const errorMsg = typeof error.response?.data === 'string'
+          ? error.response.data
           : error.response?.data?.message || 'Failed to delete profile.';
         setErrorMessage(errorMsg);
         setIsLoading(false);
@@ -136,10 +137,6 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   if (!user) {
     return (
@@ -155,9 +152,9 @@ export default function UserProfilePage() {
 
         {/* Header Section */}
         <div className="row mb-4">
-          <div className="col-12 d-flex justify-content-between align-items-center">
-            <h2>My Profile</h2>
-            <button className="btn btn-outline-danger" onClick={handleLogout}>Logout</button>
+          <div className="col-12 d-flex align-items-center gap-3">
+
+            <h2 className="mb-0">My Profile</h2>
           </div>
         </div>
 

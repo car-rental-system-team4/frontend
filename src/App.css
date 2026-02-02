@@ -22,17 +22,18 @@ main {
   transition: transform 0.3s ease-in-out;
 }
 
-.profile-container{
+.profile-container {
   padding-left: 20px;
   padding-right: 20px;
 }
 
 /* Hero Section */
-.hero{
+.hero {
   background: linear-gradient(135deg, #0066cc 0%, #004b99 100%);
   padding-top: 0;
   width: 100%;
 }
+
 .hero-section {
   background: linear-gradient(135deg, #0066cc 0%, #004b99 100%);
   padding: 80px 0 40px;
@@ -53,12 +54,15 @@ main {
   margin-bottom: 25px;
   font-size: 1.1rem;
 }
-.hero img {
+
+.hero-section img {
   object-fit: cover;
-  object-position: right;     /* <-- aligns image starting from right side */
+  object-position: right;
+  /* <-- aligns image starting from right side */
   height: 100%;
   width: 100%;
 }
+
 .hero-card {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
@@ -136,17 +140,22 @@ section {
 .profile-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;             /* vertically center content */
-  justify-content: center;         /* horizontally center content */
-  background: var(--light-bg);     /* page background */
-  padding: 40px 20px;              /* breathing room on small screens */
+  align-items: center;
+  /* vertically center content */
+  justify-content: center;
+  /* horizontally center content */
+  background: var(--light-bg);
+  /* page background */
+  padding: 40px 20px;
+  /* breathing room on small screens */
   box-sizing: border-box;
 }
 
 /* container limits width but not card-like visuals */
 .profile-container {
   width: 100%;
-  max-width: 1150px;               /* adjust as needed */
+  max-width: 1150px;
+  /* adjust as needed */
 }
 
 /* Alerts area sits above the grid and is full width of container */
@@ -157,7 +166,8 @@ section {
 /* Grid: left profile summary + right form */
 .profile-grid {
   display: grid;
-  grid-template-columns: 320px 1fr; /* left column fixed, right fluid */
+  grid-template-columns: 320px 1fr;
+  /* left column fixed, right fluid */
   gap: 28px;
   align-items: start;
   width: 100%;
@@ -168,7 +178,8 @@ section {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  align-items: center;             /* center contents horizontally */
+  align-items: center;
+  /* center contents horizontally */
   text-align: center;
 }
 
@@ -224,13 +235,14 @@ section {
 .form-section {
   margin-bottom: 22px;
   padding-bottom: 4px;
-  border-bottom: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .section-title {
   margin-bottom: 12px;
   font-size: 1.1rem;
-  color: #000000; /* bootstrap primary */
+  color: #000000;
+  /* bootstrap primary */
   font-weight: 700;
 }
 
@@ -348,6 +360,7 @@ section {
 }
 
 .btn-outline-primary {
+  background: transparent;
   border: 2px solid var(--primary-color);
   color: var(--primary-color);
   font-weight: 600;
@@ -358,10 +371,119 @@ section {
   border-color: var(--primary-color);
   color: white;
 }
-.btn-outline-secondary:hover {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+
+/* Secondary Buttons */
+.btn-secondary {
+  background: var(--text-secondary);
+  border: none;
   color: white;
+}
+
+.btn-secondary:hover {
+  background: #475569;
+  color: white;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  border: 2px solid var(--text-secondary);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--text-secondary);
+  border-color: var(--text-secondary);
+  color: white;
+}
+
+/* Danger Buttons (Delete actions) */
+.btn-danger {
+  background: var(--danger-color);
+  border: none;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 2px solid var(--danger-color);
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
+  color: white;
+}
+
+/* Success Buttons */
+.btn-success {
+  background: var(--success-color);
+  border: none;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #059669;
+  color: white;
+}
+
+.btn-outline-success {
+  background: transparent;
+  border: 2px solid var(--success-color);
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.btn-outline-success:hover {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: white;
+}
+
+/* Warning Buttons */
+.btn-warning {
+  background: var(--warning-color);
+  border: none;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+  color: white;
+}
+
+.btn-outline-warning {
+  background: transparent;
+  border: 2px solid var(--warning-color);
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.btn-outline-warning:hover {
+  background: var(--warning-color);
+  border-color: var(--warning-color);
+  color: white;
+}
+
+/* Light Buttons (for dark backgrounds) */
+.btn-outline-light {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: white;
+  font-weight: 600;
+}
+
+.btn-outline-light:hover {
+  background: white;
+  border-color: white;
+  color: var(--primary-color);
 }
 
 /* Sections */
@@ -403,12 +525,13 @@ section {
   color: var(--light-text);
   font-weight: 600;
 }
+
 .container1 {
-    padding-left: 40px;
-    padding-right: 0px;
-    padding-top: 0px;
-    padding-right: 0px;
-  }
+  padding-left: 40px;
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-right: 0px;
+}
 
 /* Responsive */
 @media (max-width: 1200px) {
@@ -424,6 +547,7 @@ section {
     padding-left: 20px;
     padding-right: 20px;
   }
+
   .container1 {
     padding-left: 40px;
     padding-right: 0px;
@@ -468,6 +592,7 @@ section {
 }
 
 @media (max-width: 768px) {
+
   /* Typography */
   .hero-title {
     font-size: 1.6rem;
@@ -490,7 +615,8 @@ section {
     font-size: 1.5rem !important;
   }
 
-  h4, h5 {
+  h4,
+  h5 {
     font-size: 1.1rem !important;
   }
 
@@ -551,7 +677,7 @@ section {
   }
 
   /* Navigation */
-  
+
   .navbar {
     padding: 10px 0;
     background-color: white;
@@ -596,6 +722,7 @@ section {
 }
 
 @media (max-width: 576px) {
+
   /* Typography - Extra Small */
   html {
     font-size: 14px;
@@ -794,6 +921,7 @@ section {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -1668,7 +1796,7 @@ footer a:hover {
   color: var(--primary-color);
 }
 
-.btn-check:checked + .btn {
+.btn-check:checked+.btn {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   color: white;
   border-color: var(--primary-color);
@@ -1753,11 +1881,11 @@ footer a:hover {
   border-radius: 50%;
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background-color: var(--primary-color);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(22px);
 }
 
@@ -2031,4 +2159,3 @@ footer a:hover {
     width: 100%;
   }
 }
-

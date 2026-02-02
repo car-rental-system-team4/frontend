@@ -1,82 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CarCard from './CarCard';
+import { getAllAvailableVehicles } from '../services/api';
 
-const SAMPLE_CARS = [
-  {
-    carId: 1,
-    brand: "Maruti",
-    model: "Swift",
-    type: "Hatchback",
-    seats: 5,
-    fuel: "Petrol",
-    transmission: "Manual",
-    mileage: "20 kmpl",
-    basePricePerDay: 1500,
-    img: "/Swift.jpg"
-  },
-  {
-    carId: 2,
-    brand: "Honda",
-    model: "Accord",
-    type: "Sedan",
-    seats: 5,
-    fuel: "Petrol",
-    transmission: "Automatic",
-    mileage: "16 kmpl",
-    basePricePerDay: 3500,
-    img: "Accord.jpg"
-  },
-  {
-    carId: 3,
-    brand: "Mahindra",
-    model: "XUV500",
-    type: "SUV",
-    seats: 7,
-    fuel: "Diesel",
-    transmission: "Automatic",
-    mileage: "15 kmpl",
-    basePricePerDay: 4500,
-    img: "XUV500.jpg"
-  },
-  {
-    carId: 4,
-    brand: "Tata",
-    model: "Nexon",
-    type: "SUV",
-    seats: 5,
-    fuel: "Petrol",
-    transmission: "Manual",
-    mileage: "18 kmpl",
-    basePricePerDay: 2500,
-    img: "Nexon.jpg"
-  },
-  {
-    carId: 5,
-    brand: "Hyundai",
-    model: "Creta",
-    type: "SUV",
-    seats: 5,
-    fuel: "Diesel",
-    transmission: "Automatic",
-    mileage: "19 kmpl",
-    basePricePerDay: 3200,
-    img: "creta.jpg"
-  },
-  {
-    carId: 6,
-    brand: "Toyota",
-    model: "Fortuner",
-    type: "SUV",
-    seats: 7,
-    fuel: "Diesel",
-    transmission: "Manual",
-    mileage: "14 kmpl",
-    basePricePerDay: 5500,
-    img: "Fortuner.jpg"
+// Helper function to resolve image path
+const getImagePath = (imageUrl, make, model) => {
+  // If imageUrl is provided and is a full URL, use it
+  if (imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
+    return imageUrl;
   }
-];
+
+  // If imageUrl is provided (just filename), use it
+  if (imageUrl) {
+    // Remove any leading slashes
+    const cleanUrl = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+    return `/vehicle-images/${cleanUrl}`;
+  }
+
+  // Fallback: Try to match based on make/model
+  const makeModel = `${make || ''}${model || ''}`.toLowerCase();
+  const imageMap = {
+    'hondaaccord': '/vehicle-images/Accord.jpg',
+    'marutiswift': '/vehicle-images/Swift.jpg',
+    'mahindraxuv500': '/vehicle-images/XUV500.jpg',
+    'mahindraxuv': '/vehicle-images/XUV.jpg',
+    'toyotafortuner': '/vehicle-images/Fortuner.jpg',
+    'hyundaicreta': '/vehicle-images/creta.jpg',
+    'tatanexon': '/vehicle-images/Nexon.jpg',
+    'marutimaruti': '/vehicle-images/Maruti.jpg'
+  };
+
+  // Try to find matching image
+  for (const [key, path] of Object.entries(imageMap)) {
+    if (makeModel.includes(key.replace(/\s+/g, ''))) {
+      return path;
+    }
+  }
+
+  // Final fallback
+  return '/vehicle-images/Accord.jpg';
+};
 
 export default function CarsSection() {
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [filterFuel, setFilterFuel] = useState("All");
@@ -84,25 +50,74 @@ export default function CarsSection() {
   const [filterSeats, setFilterSeats] = useState("All");
   const [maxPrice, setMaxPrice] = useState(10000);
 
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllAvailableVehicles();
+      // Transform backend vehicle data to match frontend car structure
+      const transformedVehicles = (response.data || []).map(vehicle => ({
+        id: vehicle.id,
+        carId: vehicle.id,
+        brand: vehicle.make,
+        make: vehicle.make,
+        model: vehicle.model,
+        type: (() => {
+          const name = `${vehicle.make} ${vehicle.model}`.toLowerCase();
+          if (name.includes('xuv') || name.includes('fortuner') || name.includes('creta') || name.includes('nexon') || name.includes('scorpio') || name.includes('harrier') || name.includes('thar')) return "SUV";
+          if (name.includes('swift') || name.includes('i20') || name.includes('baleno') || name.includes('alto') || name.includes('tiago')) return "Hatchback";
+          if (name.includes('ertiga') || name.includes('innova') || name.includes('triber')) return "SUV"; // or MPV, but user filter has SUV
+          if (name.includes('city') || name.includes('verna') || name.includes('ciaz') || name.includes('dzire') || name.includes('accord') || name.includes('civic')) return "Sedan";
+          return "Sedan"; // Default
+        })(),
+        seats: vehicle.seatingCapacity,
+        seatingCapacity: vehicle.seatingCapacity,
+        fuel: vehicle.fuelType,
+        fuelType: vehicle.fuelType,
+        transmission: vehicle.transmission,
+        mileage: "N/A",
+        basePricePerDay: vehicle.pricePerDay,
+        pricePerDay: vehicle.pricePerDay,
+        img: getImagePath(vehicle.imageUrl, vehicle.make, vehicle.model),
+        imageUrl: vehicle.imageUrl,
+        vendorId: vehicle.vendorId, // Crucial for vendor logic
+        year: vehicle.year,
+        color: vehicle.color,
+        description: vehicle.description,
+        vendorName: vehicle.vendorName
+      }));
+      setVehicles(transformedVehicles);
+    } catch (err) {
+      console.error('Error fetching vehicles:', err);
+      // Keep empty array on error
+      setVehicles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Available locations for dropdown
   const LOCATIONS = ["All Locations", "Delhi", "Mumbai", "Bangalore", "Pune", "Chennai", "Hyderabad", "Jaipur"];
 
-  const filteredCars = SAMPLE_CARS.filter(car => {
-    // Type filter
-    if (filterType !== "All" && car.type !== filterType) return false;
-    
+  const filteredCars = vehicles.filter(car => {
+    // Type filter (can be enhanced when vehicle type is added to backend)
+    // if (filterType !== "All" && car.type !== filterType) return false;
+
     // Fuel filter
-    if (filterFuel !== "All" && car.fuel !== filterFuel) return false;
-    
+    if (filterFuel !== "All" && car.fuel.toUpperCase() !== filterFuel.toUpperCase()) return false;
+
     // Transmission filter
-    if (filterTransmission !== "All" && car.transmission !== filterTransmission) return false;
-    
+    if (filterTransmission !== "All" && car.transmission.toUpperCase() !== filterTransmission.toUpperCase()) return false;
+
     // Seats filter
     if (filterSeats !== "All" && car.seats !== parseInt(filterSeats)) return false;
-    
+
     // Price filter
     if (car.basePricePerDay > maxPrice) return false;
-    
+
     return true;
   });
 
@@ -115,20 +130,33 @@ export default function CarsSection() {
     setMaxPrice(10000);
   };
 
+  if (loading) {
+    return (
+      <section id="cars" className="py-5">
+        <div className="container text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading available vehicles...</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="cars" className="py-5">
       <div className="container">
         <h2 className="mb-4 fw-bold">Find Your Perfect Car</h2>
-        
+
         {/* Location and Filters Section */}
         <div className="card bg-light p-4 mb-5">
           <h5 className="mb-3 fw-bold">Search & Filter Options</h5>
-          
+
           {/* Location Input */}
           <div className="row mb-3">
             <div className="col-12 col-md-6">
               <label className="form-label fw-bold">Pick-up Location</label>
-              <select 
+              <select
                 className="form-select form-select-lg"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -152,7 +180,7 @@ export default function CarsSection() {
             {/* Car Type Filter */}
             <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label fw-bold">Car Type</label>
-              <select 
+              <select
                 className="form-select"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
@@ -167,35 +195,37 @@ export default function CarsSection() {
             {/* Fuel Type Filter */}
             <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label fw-bold">Fuel Type</label>
-              <select 
+              <select
                 className="form-select"
                 value={filterFuel}
                 onChange={(e) => setFilterFuel(e.target.value)}
               >
                 <option value="All">All Fuels</option>
-                <option value="Petrol">Petrol</option>
-                <option value="Diesel">Diesel</option>
+                <option value="PETROL">Petrol</option>
+                <option value="DIESEL">Diesel</option>
+                <option value="ELECTRIC">Electric</option>
+                <option value="HYBRID">Hybrid</option>
               </select>
             </div>
 
             {/* Transmission Filter */}
             <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label fw-bold">Transmission</label>
-              <select 
+              <select
                 className="form-select"
                 value={filterTransmission}
                 onChange={(e) => setFilterTransmission(e.target.value)}
               >
                 <option value="All">All Types</option>
-                <option value="Manual">Manual</option>
-                <option value="Automatic">Automatic</option>
+                <option value="MANUAL">Manual</option>
+                <option value="AUTOMATIC">Automatic</option>
               </select>
             </div>
 
             {/* Seats Filter */}
             <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label fw-bold">Seats</label>
-              <select 
+              <select
                 className="form-select"
                 value={filterSeats}
                 onChange={(e) => setFilterSeats(e.target.value)}
@@ -211,8 +241,8 @@ export default function CarsSection() {
           <div className="row g-3 mt-2">
             <div className="col-12 col-md-6">
               <label className="form-label fw-bold">Max Price per Day: ₹{maxPrice}</label>
-              <input 
-                type="range" 
+              <input
+                type="range"
                 className="form-range"
                 min="1000"
                 max="10000"
@@ -225,7 +255,7 @@ export default function CarsSection() {
 
             {/* Reset Button */}
             <div className="col-12 col-md-6 d-flex align-items-end">
-              <button 
+              <button
                 className="btn btn-outline-secondary w-100"
                 onClick={resetFilters}
               >
@@ -238,7 +268,7 @@ export default function CarsSection() {
         {/* Results Count */}
         <div className="mb-3">
           <p className="text-muted">
-            Showing <strong>{filteredCars.length}</strong> car(s) 
+            Showing <strong>{filteredCars.length}</strong> car(s)
             {location && ` in ${location}`}
           </p>
         </div>
