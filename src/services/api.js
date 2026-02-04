@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base URL for your Spring Boot Backend
-const API_URL = "http://13.203.34.193:8080/api";
+const API_URL = "http://rentyourcar.pratik-dev.in:8080/api";
 
 const api = axios.create({
   baseURL: API_URL,
