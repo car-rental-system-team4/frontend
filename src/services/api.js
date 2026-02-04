@@ -1,9 +1,7 @@
 import axios from "axios";
 
 // Base URL for your Spring Boot Backend
-// Use relative path so it works on localhost (with proxy) and EC2 (with Nginx)
-// const API_URL = "http://localhost:8080/api"; // OLD
-const API_URL = "/api"; // NEW - Goes through Nginx Proxy
+const API_URL = "http://13.127.76.164:8080/api";
 
 const api = axios.create({
   baseURL: API_URL,
